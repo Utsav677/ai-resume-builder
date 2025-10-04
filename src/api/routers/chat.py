@@ -103,13 +103,15 @@ async def send_message(
 @router.post("/stream")
 async def stream_message(
     request: ChatMessage,
-    current_user: User = Depends(get_current_user_from_firebase)
+    current_user: Optional[User] = Depends(get_current_user_optional)
 ):
     """
     Stream responses from the resume builder agent (Server-Sent Events)
 
     This endpoint streams the agent's responses in real-time,
     providing a better UX for longer operations like resume generation.
+
+    Supports both authenticated and guest users.
     """
     thread_id = request.thread_id or str(uuid.uuid4())
 
@@ -119,6 +121,10 @@ async def stream_message(
         }
     }
 
+    # Determine if user is guest or authenticated
+    is_guest = current_user is None
+    user_id = current_user.user_id if current_user else f"guest_{thread_id}"
+
     async def event_generator() -> AsyncIterator[str]:
         """Generate Server-Sent Events"""
         try:
@@ -126,7 +132,8 @@ async def stream_message(
             for chunk in graph.stream(
                 {
                     "messages": [HumanMessage(content=request.message)],
-                    "user_id": current_user.user_id
+                    "user_id": user_id,
+                    "is_guest": is_guest
                 },
                 config
             ):
