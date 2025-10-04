@@ -24,8 +24,9 @@ def initialize_session(state: ResumeBuilderState) -> dict:
 
     current_stage = state.get("current_stage", "init")
     profile_complete = state.get("profile_complete", False)
+    is_guest = state.get("is_guest", False)
 
-    print(f"DEBUG ROUTER: current_stage={current_stage}, profile_complete={profile_complete}")
+    print(f"DEBUG ROUTER: current_stage={current_stage}, profile_complete={profile_complete}, is_guest={is_guest}")
 
     # If already initialized in a previous turn, don't re-initialize
     # Just pass through - the routing happens via conditional edges
@@ -34,32 +35,38 @@ def initialize_session(state: ResumeBuilderState) -> dict:
         return {"current_stage": current_stage}  # Pass through current stage
 
     # Get user_id from state
-    # In production, this MUST be passed from FastAPI after Firebase auth
-    # For testing in Studio, falls back to DEFAULT_USER_ID
     user_id = state.get("user_id")
     if not user_id:
-        # Fallback for local testing only - production should always pass user_id
+        # Fallback for local testing only
         try:
             from .studio_config import DEFAULT_USER_ID
             user_id = DEFAULT_USER_ID
             print(f"DEBUG ROUTER: Using DEFAULT_USER_ID for testing: {user_id}")
         except Exception as e:
-            raise ValueError(
-                "user_id is required! Pass it via config: "
-                '{"configurable": {"thread_id": "...", "user_id": "..."}}'
-            )
+            raise ValueError("user_id is required!")
 
-    # Check if user has existing profile
+    # For guest users, skip profile check (they'll provide resume inline)
+    if is_guest:
+        print(f"DEBUG ROUTER: Guest user - skipping profile check")
+        return {
+            "user_id": user_id,
+            "is_guest": True,
+            "profile_complete": False,
+            "current_stage": "initialized"
+        }
+
+    # For authenticated users, check if they have existing profile
     db = SessionLocal()
     try:
         has_profile = UserService.profile_exists(db, user_id)
     finally:
         db.close()
 
-    print(f"DEBUG ROUTER: First time init - has_profile={has_profile}")
+    print(f"DEBUG ROUTER: Authenticated user - has_profile={has_profile}")
 
     return {
         "user_id": user_id,
+        "is_guest": False,
         "profile_complete": has_profile,
         "current_stage": "initialized"
     }
@@ -180,28 +187,45 @@ Extract information even if it's in LaTeX format. Keep ALL quantifiable metrics.
 
         profile_data = json.loads(content)
 
-        # Save to database
+        # Save to database only for authenticated users
         user_id = state.get("user_id")
-        db = SessionLocal()
-        try:
-            UserService.save_user_profile(db, user_id, profile_data)
-        finally:
-            db.close()
+        is_guest = state.get("is_guest", False)
+
+        if not is_guest:
+            db = SessionLocal()
+            try:
+                UserService.save_user_profile(db, user_id, profile_data)
+            finally:
+                db.close()
 
         exp_count = len(profile_data.get("experience", []))
         proj_count = len(profile_data.get("projects", []))
 
-        return {
-            "profile_complete": True,
-            "current_stage": "profile_extracted",
-            "messages": [AIMessage(content=(
-                f" **Profile Extracted Successfully!**\n\n"
-                f" Found:\n"
+        # Different message for guests vs authenticated users
+        if is_guest:
+            message = (
+                f"✓ **Profile Extracted!**\n\n"
+                f"Found:\n"
+                f"- **{exp_count}** work experiences\n"
+                f"- **{proj_count}** projects\n"
+                f"- Contact info and skills\n\n"
+                f"_(Guest mode: profile not saved)_"
+            )
+        else:
+            message = (
+                f"✓ **Profile Extracted Successfully!**\n\n"
+                f"Found:\n"
                 f"- **{exp_count}** work experiences\n"
                 f"- **{proj_count}** projects\n"
                 f"- Contact info and skills saved\n\n"
                 f"Great! Your profile is saved to the database."
-            ))]
+            )
+
+        return {
+            "profile_complete": True,
+            "profile_data": profile_data,  # Store in state for guests
+            "current_stage": "profile_extracted",
+            "messages": [AIMessage(content=message)]
         }
 
     except Exception as e:
@@ -406,13 +430,17 @@ def optimize_ats(state: ResumeBuilderState) -> dict:
 
     job_analysis = state.get("job_analysis")
     user_id = state.get("user_id")
+    is_guest = state.get("is_guest", False)
 
-    # Get user profile for skills
-    db = SessionLocal()
-    try:
-        profile_data = UserService.get_user_profile(db, user_id)
-    finally:
-        db.close()
+    # Get user profile - from state for guests, from DB for authenticated users
+    if is_guest:
+        profile_data = state.get("profile_data", {})
+    else:
+        db = SessionLocal()
+        try:
+            profile_data = UserService.get_user_profile(db, user_id)
+        finally:
+            db.close()
 
     user_skills = profile_data.get("technical_skills", {})
 
@@ -481,18 +509,22 @@ def generate_resume(state: ResumeBuilderState) -> dict:
     """Generate final resume: LaTeX + PDF"""
 
     user_id = state.get("user_id")
+    is_guest = state.get("is_guest", False)
     selected_experiences = state.get("selected_experiences")
     selected_projects = state.get("selected_projects")
     prioritized_skills = state.get("prioritized_skills")
     job_analysis = state.get("job_analysis", {})
     ats_score = state.get("ats_score")
 
-    # Get full profile
-    db = SessionLocal()
-    try:
-        profile_data = UserService.get_user_profile(db, user_id)
-    finally:
-        db.close()
+    # Get full profile - from state for guests, from DB for authenticated users
+    if is_guest:
+        profile_data = state.get("profile_data", {})
+    else:
+        db = SessionLocal()
+        try:
+            profile_data = UserService.get_user_profile(db, user_id)
+        finally:
+            db.close()
 
     # Generate LaTeX using service
     try:
@@ -509,48 +541,51 @@ def generate_resume(state: ResumeBuilderState) -> dict:
         filename = f"resume_{user_id}_{timestamp}"
         pdf_path = latex_service.compile_to_pdf(latex_code, filename)
 
-        # Save to database
-        db = SessionLocal()
-        try:
-            resume_gen = ResumeGeneration(
-                generation_id=str(uuid.uuid4()),
-                user_id=user_id,
-                job_title=job_analysis.get("job_title"),
-                company_name=job_analysis.get("company_name"),
-                job_description=state.get("job_description"),
-                tailored_content={
-                    "selected_experiences": selected_experiences,
-                    "selected_projects": selected_projects,
-                    "prioritized_skills": prioritized_skills
-                },
-                ats_keywords=job_analysis.get("keywords"),
-                ats_score=ats_score,
-                latex_code=latex_code,
-                pdf_path=pdf_path
-            )
-            db.add(resume_gen)
-            db.commit()
-        finally:
-            db.close()
+        # Save to database only for authenticated users
+        if not is_guest:
+            db = SessionLocal()
+            try:
+                resume_gen = ResumeGeneration(
+                    generation_id=str(uuid.uuid4()),
+                    user_id=user_id,
+                    job_title=job_analysis.get("job_title"),
+                    company_name=job_analysis.get("company_name"),
+                    job_description=state.get("job_description"),
+                    tailored_content={
+                        "selected_experiences": selected_experiences,
+                        "selected_projects": selected_projects,
+                        "prioritized_skills": prioritized_skills
+                    },
+                    ats_keywords=job_analysis.get("keywords"),
+                    ats_score=ats_score,
+                    latex_code=latex_code,
+                    pdf_path=pdf_path
+                )
+                db.add(resume_gen)
+                db.commit()
+            finally:
+                db.close()
 
         # Build success message
+        guest_note = "\n\n_(Guest mode: resume not saved. Sign up to save your resumes!)_" if is_guest else ""
+
         if pdf_path:
             result_message = (
-                f" **Resume Generated Successfully!**\n\n"
-                f" **PDF saved to:** `{pdf_path}`\n"
-                f" **ATS Score:** {ats_score}%\n"
-                f" **Format:** Professional ATS-optimized LaTeX template\n\n"
+                f"✓ **Resume Generated Successfully!**\n\n"
+                f"**PDF saved to:** `{pdf_path}`\n"
+                f"**ATS Score:** {ats_score}%\n"
+                f"**Format:** Professional ATS-optimized LaTeX template\n\n"
                 f"**LaTeX Code:**\n```latex\n{latex_code[:800]}...\n```\n\n"
-                f"Download your PDF from the outputs folder!"
+                f"Download your PDF from the outputs folder!{guest_note}"
             )
         else:
             result_message = (
-                f" **Resume Generated (LaTeX only)**\n\n"
-                f" LaTeX code generated successfully\n"
-                f" PDF compilation failed (pdflatex not installed)\n"
-                f" **ATS Score:** {ats_score}%\n\n"
+                f"✓ **Resume Generated (LaTeX only)**\n\n"
+                f"LaTeX code generated successfully\n"
+                f"PDF compilation failed (pdflatex not installed)\n"
+                f"**ATS Score:** {ats_score}%\n\n"
                 f"**LaTeX Code:**\n```latex\n{latex_code}\n```\n\n"
-                f" Copy this code to [Overleaf.com](https://overleaf.com) to compile your PDF!"
+                f"Copy this code to [Overleaf.com](https://overleaf.com) to compile your PDF!{guest_note}"
             )
 
         return {

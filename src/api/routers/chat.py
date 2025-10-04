@@ -8,7 +8,7 @@ import uuid
 
 from langchain_core.messages import HumanMessage
 
-from ..dependencies import get_current_user_from_firebase
+from ..dependencies import get_current_user_optional
 from ...resume_agent.models import User
 from ...resume_agent.graph import graph
 
@@ -35,35 +35,46 @@ class ChatResponse(BaseModel):
 @router.post("/message", response_model=ChatResponse)
 async def send_message(
     request: ChatMessage,
-    current_user: User = Depends(get_current_user_from_firebase)
+    current_user: Optional[User] = Depends(get_current_user_optional)
 ):
     """
     Send a message to the resume builder agent
 
-    This endpoint:
-    1. Authenticates the user (Firebase token)
-    2. Creates or resumes a conversation thread
-    3. Invokes the LangGraph with user's message and user_id
-    4. Returns the agent's response
+    This endpoint supports both:
+    - **Authenticated users**: Full features with profile persistence
+    - **Guest users**: No auth required, short-term memory only (no DB saves)
 
-    The user_id is automatically passed to the graph, enabling multi-user support.
+    Authenticated users:
+    - If they have a profile, only need to paste job description
+    - Profile automatically loaded from database
+    - Resumes saved to database
+
+    Guest users:
+    - Must provide both resume AND job description
+    - Nothing saved to database (short-term memory only)
+    - Can still generate resumes
     """
     # Generate thread_id if not provided
     thread_id = request.thread_id or str(uuid.uuid4())
 
-    # Create config with thread_id and user_id
+    # Create config with thread_id
     config = {
         "configurable": {
             "thread_id": thread_id,
         }
     }
 
+    # Determine if user is guest or authenticated
+    is_guest = current_user is None
+    user_id = current_user.user_id if current_user else f"guest_{thread_id}"
+
     try:
-        # Invoke the graph with the user's message and user_id
+        # Invoke the graph with the user's message, user_id, and guest flag
         result = graph.invoke(
             {
                 "messages": [HumanMessage(content=request.message)],
-                "user_id": current_user.user_id  # Pass authenticated user's ID!
+                "user_id": user_id,
+                "is_guest": is_guest  # Flag to skip database operations
             },
             config
         )
