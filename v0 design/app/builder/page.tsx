@@ -5,7 +5,6 @@ import type React from "react"
 import { useState, useEffect } from "react"
 import { useAuth } from "@/contexts/AuthContext"
 import { useRouter } from "next/navigation"
-import { apiClient } from "@/lib/api"
 
 interface Message {
   id: string
@@ -18,10 +17,7 @@ export default function BuilderPage() {
   const { user, loading: authLoading } = useAuth()
   const [messages, setMessages] = useState<Message[]>([])
   const [input, setInput] = useState("")
-  const [threadId, setThreadId] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
-  const [atsScore, setAtsScore] = useState<number | null>(null)
-  const [latexCode, setLatexCode] = useState<string | null>(null)
   const router = useRouter()
 
   useEffect(() => {
@@ -45,35 +41,18 @@ export default function BuilderPage() {
     setLoading(true)
 
     try {
-      const response = await apiClient.sendMessage(userMessage.content, threadId || undefined)
-
-      setThreadId(response.thread_id)
-
+      // TODO: Send message to backend API
       const assistantMessage: Message = {
         id: (Date.now() + 1).toString(),
         role: "assistant",
-        content: response.response,
+        content:
+          "Backend API integration coming soon! This is where the AI will respond to help you build your resume.",
         timestamp: new Date(),
       }
 
       setMessages((prev) => [...prev, assistantMessage])
-
-      if (response.ats_score !== null) {
-        setAtsScore(response.ats_score)
-      }
-
-      if (response.latex_code) {
-        setLatexCode(response.latex_code)
-      }
     } catch (error: any) {
       console.error("Error sending message:", error)
-      const errorMessage: Message = {
-        id: (Date.now() + 1).toString(),
-        role: "assistant",
-        content: "Sorry, I encountered an error. Please try again.",
-        timestamp: new Date(),
-      }
-      setMessages((prev) => [...prev, errorMessage])
     } finally {
       setLoading(false)
     }
@@ -100,7 +79,7 @@ export default function BuilderPage() {
   return (
     <div className="flex h-screen flex-col bg-white">
       {/* Header */}
-      <header className="flex items-center justify-between border-b border-gray-200 bg-white px-6 py-4">
+      <header className="flex items-center gap-3 border-b border-gray-200 bg-white px-6 py-4">
         <div className="flex items-center gap-2">
           <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-blue-500 to-purple-600">
             <svg className="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -109,21 +88,6 @@ export default function BuilderPage() {
           </div>
           <h1 className="text-xl font-bold text-gray-900">AI Resume Builder</h1>
         </div>
-
-        {atsScore !== null && (
-          <div className="flex items-center gap-2">
-            <span className="text-sm text-gray-600">ATS Score:</span>
-            <div className={`px-3 py-1.5 rounded-lg text-sm font-bold ${
-              atsScore >= 80
-                ? 'bg-green-100 text-green-700'
-                : atsScore >= 60
-                ? 'bg-yellow-100 text-yellow-700'
-                : 'bg-orange-100 text-orange-700'
-            }`}>
-              {atsScore.toFixed(0)}%
-            </div>
-          </div>
-        )}
       </header>
 
       {/* Messages */}
@@ -233,32 +197,6 @@ export default function BuilderPage() {
           )}
         </div>
       </div>
-
-      {/* Actions bar when resume is ready */}
-      {latexCode && (
-        <div className="border-t border-gray-200 bg-blue-50 px-6 py-3">
-          <div className="mx-auto flex max-w-3xl items-center justify-between gap-4">
-            <span className="text-sm text-gray-700">✓ Resume generated successfully!</span>
-            <div className="flex gap-2">
-              <button
-                onClick={() => router.push('/dashboard')}
-                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium"
-              >
-                View Dashboard
-              </button>
-              <button
-                onClick={() => {
-                  navigator.clipboard.writeText(latexCode);
-                  alert('LaTeX code copied!');
-                }}
-                className="px-4 py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors text-sm font-medium"
-              >
-                Copy LaTeX
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* Input */}
       <div className="border-t border-gray-200 bg-white p-6">
