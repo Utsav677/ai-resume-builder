@@ -1,0 +1,354 @@
+Home
+Observability
+Tracing Projects
+1
+Monitoring
+0
+Evaluation
+Datasets & Experiments
+0
+Annotation Queues
+0
+Prompt Engineering
+Prompts
+0
+Playground
+LangGraph Platform
+Deployments
+0
+Settings
+
+More
+
+Personal
+utsiear@gmail.com
+
+LangGraph Studio
+/
+
+Default (resume_builder)
+
+
+Graph
+
+Chat
+human
+
+
+hello
+
+ai
+
+
+Welcome to the AI Resume Builder!
+
+
+I'll help you create an ATS-optimized resume tailored to any job.
+
+
+First, I need to build your profile. Please provide ONE of the following:
+
+
+
+Your current resume (paste the full text)
+
+A detailed summary of your experience
+
+
+Paste it below, and I'll extract all the important information!
+
+ai
+
+
+I need more information. Please paste your full resume or a detailed summary (at least 100 characters).
+
+ai
+
+
+Setup complete!
+
+
+Graph is working correctly. The agent will continue in the next steps.
+
+human
+
+
+%-------------------------
+% Resume in Latex
+% Author : Jake Gutierrez
+% Based off of: https://github.com/sb2nov/resume
+% License : MIT
+%------------------------
+
+\documentclass[letterpaper,11pt]{article}
+
+\usepackage{latexsym}
+\usepackage[empty]{fullpage}
+\usepackage{titlesec}
+\usepackage{marvosym}
+\usepackage[usenames,dvipsnames]{color}
+\usepackage{verbatim}
+\usepackage{enumitem}
+\usepackage[hidelinks]{hyperref}
+\usepackage{fancyhdr}
+\usepackage[english]{babel}
+\usepackage{tabularx}
+\input{glyphtounicode}
+
+
+%----------FONT OPTIONS----------
+% sans-serif
+% \usepackage[sfdefault]{FiraSans}
+% \usepackage[sfdefault]{roboto}
+% \usepackage[sfdefault]{noto-sans}
+% \usepackage[default]{sourcesanspro}
+
+% serif
+% \usepackage{CormorantGaramond}
+% \usepackage{charter}
+
+
+\pagestyle{fancy}
+\fancyhf{} % clear all header and footer fields
+\fancyfoot{}
+\renewcommand{\headrulewidth}{0pt}
+\renewcommand{\footrulewidth}{0pt}
+
+% Adjust margins - slightly more aggressive to fit content
+\addtolength{\oddsidemargin}{-0.6in}
+\addtolength{\evensidemargin}{-0.6in}
+\addtolength{\textwidth}{1.2in}
+\addtolength{\topmargin}{-.7in}
+\addtolength{\textheight}{1.4in}
+
+\urlstyle{same}
+
+\raggedbottom
+\raggedright
+\setlength{\tabcolsep}{0in}
+
+% Sections formatting - reduced spacing
+\titleformat{\section}{
+  \vspace{-6pt}\scshape\raggedright\large
+}{}{0em}{}[\color{black}\titlerule \vspace{-7pt}]
+
+% Ensure that generate pdf is machine readable/ATS parsable
+\pdfgentounicode=1
+
+%-------------------------
+% Custom commands - tighter spacing
+\newcommand{\resumeItem}[1]{
+  \item\small{
+    {#1 \vspace{-3pt}}
+  }
+}
+
+\newcommand{\resumeSubheading}[4]{
+  \vspace{-3pt}\item
+    \begin{tabular*}{0.97\textwidth}[t]{l@{\extracolsep{\fill}}r}
+      \textbf{#1} & #2 \\
+      \textit{\small#3} & \textit{\small #4} \\
+    \end{tabular*}\vspace{-9pt}
+}
+
+\newcommand{\resumeSubSubheading}[2]{
+    \item
+    \begin{tabular*}{0.97\textwidth}{l@{\extracolsep{\fill}}r}
+      \textit{\small#1} & \textit{\small #2} \\
+    \end{tabular*}\vspace{-9pt}
+}
+
+\newcommand{\resumeProjectHeading}[2]{
+    \item
+    \begin{tabular*}{0.97\textwidth}{l@{\extracolsep{\fill}}r}
+      \small#1 & #2 \\
+    \end{tabular*}\vspace{-9pt}
+}
+
+\newcommand{\resumeSubItem}[1]{\resumeItem{#1}\vspace{-6pt}}
+
+\renewcommand\labelitemii{$\vcenter{\hbox{\tiny$\bullet$}}$}
+
+\newcommand{\resumeSubHeadingListStart}{\begin{itemize}[leftmargin=0.15in, label={}]}
+\newcommand{\resumeSubHeadingListEnd}{\end{itemize}}
+\newcommand{\resumeItemListStart}{\begin{itemize}[itemsep=-1pt]}
+\newcommand{\resumeItemListEnd}{\end{itemize}\vspace{-7pt}}
+
+%-------------------------------------------
+%%%%%%  RESUME STARTS HERE  %%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+\begin{document}
+
+%----------HEADING----------
+\begin{center}
+    \textbf{\Huge \scshape Utsav Arora} \\ \vspace{1pt}
+    \small 480-882-8549 $|$ \href{mailto:arora252@purdue.edu}{\underline{arora252@purdue.edu}} $|$ 
+    \href{https://linkedin.com/in/utsav-arora-4297a1174}{\underline{www.linkedin.com/in/u-arora}} $|$
+    \href{https://github.com/Utsav677}{\underline{https://github.com/Utsav677}}
+\end{center}
+
+
+%-----------EDUCATION-----------
+\section{Education}
+  \resumeSubHeadingListStart
+    \resumeSubheading
+      {Purdue University}{West Lafayette, IN}
+      {Bachelor of Science in Computer Science, Minor in AI and Math}{Expected Graduation: May 2027}
+      \resumeItemListStart
+        \resumeItem{Relevant Coursework: Data Structures and Algorithms, Object-Oriented Programming}
+      \resumeItemListEnd
+  \resumeSubHeadingListEnd
+
+
+%-----------EXPERIENCE-----------
+\section{Experience}
+  \resumeSubHeadingListStart
+
+    \resumeSubheading
+      {Data Engineer/AI Researcher}{May 2025 -- August 2025}
+      {Smart Energy Water (SEW)}{In-person}
+      \resumeItemListStart
+        \resumeItem{Developed a 3-stage neural network for energy disaggregation using regression networks, CNN, and deep learning subnetworks, achieving \textbf{72\% accuracy} with \textbf{50\% improvement} over baseline models}
+        \resumeItem{Researched and implemented advanced ML architectures including GRU and LSTM models for energy consumption pattern recognition and time-series analysis}
+        \resumeItem{Built interactive frontend prototype allowing users to upload Itron meter readings and visualize energy waste patterns with optimization recommendations}
+        \resumeItem{Created channel optimization models for customer communication using data-driven assumptions and linear regression to predict ROI across different communication channels}
+        \resumeItem{Generated and validated \textbf{10,000+ synthetic datasets} for model training while ensuring statistical accuracy and preventing data skew}
+      \resumeItemListEnd
+
+    \resumeSubheading
+      {Founding Engineer/CSO}{Jan. 2025 -- Present}
+      {ACS}{Hybrid}
+      \resumeItemListStart
+        \resumeItem{Developed responsive, intuitive user interfaces with React.js and Tailwind CSS, integrating \textbf{10+ APIs} for seamless, high-performance experiences}
+        \resumeItem{Designed and optimized AWS DynamoDB data models and indexing strategies, improving query performance by \textbf{30\%} while ensuring scalability and reliability}
+        \resumeItem{Leveraged AWS Lambda, CloudWatch, and IAM to automate database operations, monitor performance, and uphold security and data integrity}
+        \resumeItem{Established development workflows and coding standards for the engineering team while mentoring junior developers}
+      \resumeItemListEnd
+
+    \resumeSubheading
+      {Head Frontend Developer}{Jan. 2025 -- Present}
+      {Huddle Social}{Remote}
+      \resumeItemListStart
+        \resumeItem{Led development of \textbf{10+ dynamic pages} for product showcases, event management, and housing listings using Next.js, React.js, and Tailwind CSS, scaling from \textbf{400 to 800+ active users} with \textbf{200+ daily active users}}
+        \resumeItem{Optimized page load times by \textbf{2 seconds}, implementing Firebase Authentication for secure, real-time user management and managing Firestore and Storage buckets}
+        \resumeItem{Planning deeper backend integrations to connect UI components with scalable cloud services and deliver a fully integrated application ecosystem}
+        \resumeItem{Collaborated with design team to implement responsive UI components and optimize user experience across desktop and mobile platforms}
+      \resumeItemListEnd
+
+
+
+  \resumeSubHeadingListEnd
+
+
+%-----------PROJECTS-----------
+\section{Projects}
+    \resumeSubHeadingListStart
+      \resumeProjectHeading
+          {\textbf{Energy Disaggregation Neural Network} $|$ \emph{Python, TensorFlow, CNN, GRU/LSTM, Frontend Development}}{2025}
+          \resumeItemListStart
+            \resumeItem{Designed and implemented a custom 3-stage neural network for smart meter energy disaggregation, achieving \textbf{72\% accuracy} in appliance identification}
+            \resumeItem{Developed interactive web application prototype allowing users to upload meter data and receive personalized energy waste analysis}
+            \resumeItem{Researched ML evolution in energy disaggregation from combinatorial optimization to modern GRU-based architectures}
+          \resumeItemListEnd
+      \resumeProjectHeading
+          {\textbf{Plate Mate} $|$ \emph{Python, Web Scraping, KNN, GPT-4-turbo}}{2024}
+          \resumeItemListStart
+            \resumeItem{Developed a meal recommendation platform using web scraping, KNN algorithms, and GPT-4-turbo to enhance dining options for students}
+            \resumeItem{Won Best Presentation and Pitch award for innovative approach to student meal planning}
+            \resumeItem{Implemented machine learning techniques to personalize recommendations based on dietary preferences and nutritional needs}
+          \resumeItemListEnd
+      \resumeProjectHeading
+          {\textbf{News Feed Application} $|$ \emph{Java, SQL, GUI}}{2024}
+          \resumeItemListStart
+            \resumeItem{Worked within a team to create a comprehensive news feed application with social features}
+            \resumeItem{Implemented friend system with commenting functionality on posts using Java and SQL databases}
+            \resumeItem{Designed and developed GUI interfaces for seamless user interaction and content management}
+          \resumeItemListEnd
+    \resumeSubHeadingListEnd
+
+
+%-----------PROGRAMMING SKILLS-----------
+\section{Technical Skills}
+ \begin{itemize}[leftmargin=0.15in, label={}]
+    \small{\item{
+     \textbf{Languages}{: JavaScript, Python, Java, SQL, C, Arduino, HTML/CSS} \\
+     \textbf{Frameworks}{: React.js, Next.js, Node.js, Tailwind CSS, Flask, FastAPI} \\
+     \textbf{Developer Tools}{: Git, AWS (Lambda, DynamoDB, CloudWatch, IAM), Firebase, Vercel,  Jupyter Notebook} \\
+     \textbf{Libraries \& Technologies}{: Firebase Authentication, Firestore, Cloud Storage, KNN, GPT-4-turbo, Web Scraping}
+    }}
+ \end{itemize}
+
+
+%-------------------------------------------
+\end{document}
+
+this is my resume
+
+ai
+
+
+Welcome to the AI Resume Builder!
+
+
+I'll help you create an ATS-optimized resume tailored to any job.
+
+
+First, I need to build your profile. Please provide ONE of the following:
+
+
+
+Your current resume (paste the full text)
+
+A detailed summary of your experience
+
+
+Paste it below, and I'll extract all the important information!
+
+ai
+
+
+I need more information. Please paste your full resume or a detailed summary (at least 100 characters).
+
+ai
+
+
+Setup complete!
+
+
+Graph is working correctly. The agent will continue in the next steps.
+
+
+Scroll to top
+Enter message
+
+Show tool calls
+
+Upload files or images
+
+Threads
+
+New
+
+
+hello
+
+hello
+
+hello
+
+hello
+
+hello
+
+hello
+
+hello
+
+here is my resume
+
+hello
+
+hello
+
+👋 Welcome to the AI Resume Builder! I'll help you create an ATS-optimized resume tailored to any job. First, I need to build your profile. Please provide ONE of the following: 1. **Your current resume** (paste the full text) 2. **A detailed summary** of your experience Paste it below, and I'll extract all the important information!
