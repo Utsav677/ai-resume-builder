@@ -5,6 +5,7 @@ import type React from "react"
 import { useState, useRef } from "react"
 import { useAuth } from "@/contexts/AuthContext"
 import { useRouter } from "next/navigation"
+import { apiClient } from "@/lib/api"
 
 interface Message {
   id: string
@@ -21,15 +22,28 @@ export default function Home() {
   const [input, setInput] = useState("")
   const [loading, setLoading] = useState(false)
   const [guestResumeUploaded, setGuestResumeUploaded] = useState(false)
+  const [threadId, setThreadId] = useState<string | null>(null)
+  const [atsScore, setAtsScore] = useState<number | null>(null)
+  const [latexCode, setLatexCode] = useState<string | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const sendMessage = async (file?: File) => {
     if ((!input.trim() && !file) || loading) return
 
+    // For file uploads, read file content first
+    let messageContent = input.trim()
+    if (file) {
+      const fileText = await file.text()
+      messageContent = `Here's my resume:\n\n${fileText}`
+      if (!user) {
+        setGuestResumeUploaded(true)
+      }
+    }
+
     const userMessage: Message = {
       id: Date.now().toString(),
       role: "user",
-      content: file ? `Uploaded: ${file.name}` : input.trim(),
+      content: file ? `Uploaded: ${file.name}` : messageContent,
       timestamp: new Date(),
       file,
     }
@@ -39,38 +53,39 @@ export default function Home() {
     setLoading(true)
 
     try {
-      if (!user && file) {
-        setGuestResumeUploaded(true)
-        const assistantMessage: Message = {
-          id: (Date.now() + 1).toString(),
-          role: "assistant",
-          content:
-            "Great! I've received your resume. Now, please paste the job description you want to tailor your resume for.",
-          timestamp: new Date(),
-        }
-        setTimeout(() => {
-          setMessages((prev) => [...prev, assistantMessage])
-          setLoading(false)
-        }, 800)
-        return
-      }
+      // Send message to backend API
+      const response = await apiClient.sendMessage(messageContent, threadId || undefined)
 
-      // TODO: Send message to backend API
+      setThreadId(response.thread_id)
+
       const assistantMessage: Message = {
         id: (Date.now() + 1).toString(),
         role: "assistant",
-        content: user
-          ? "Perfect! I'll analyze this job description and tailor your resume to match the requirements. This will take a moment..."
-          : "I'm analyzing your resume and the job description to create an optimized version. This will take a moment...",
+        content: response.response,
         timestamp: new Date(),
       }
 
-      setTimeout(() => {
-        setMessages((prev) => [...prev, assistantMessage])
-        setLoading(false)
-      }, 800)
+      setMessages((prev) => [...prev, assistantMessage])
+
+      // Update ATS score and LaTeX code if available
+      if (response.ats_score !== null && response.ats_score !== undefined) {
+        setAtsScore(response.ats_score)
+      }
+
+      if (response.latex_code) {
+        setLatexCode(response.latex_code)
+      }
+
     } catch (error: any) {
       console.error("Error sending message:", error)
+      const errorMessage: Message = {
+        id: (Date.now() + 1).toString(),
+        role: "assistant",
+        content: "Sorry, I encountered an error. Please try again. Make sure the backend is running.",
+        timestamp: new Date(),
+      }
+      setMessages((prev) => [...prev, errorMessage])
+    } finally {
       setLoading(false)
     }
   }
@@ -271,6 +286,47 @@ export default function Home() {
           )}
         </div>
       </div>
+
+      {/* ATS Score Display */}
+      {atsScore !== null && (
+        <div className="border-t border-gray-200 bg-gray-50 px-6 py-3">
+          <div className="mx-auto max-w-3xl flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-gray-600">ATS Score:</span>
+              <div className={`px-3 py-1.5 rounded-lg text-sm font-bold ${
+                atsScore >= 80
+                  ? 'bg-green-100 text-green-700'
+                  : atsScore >= 60
+                  ? 'bg-yellow-100 text-yellow-700'
+                  : 'bg-orange-100 text-orange-700'
+              }`}>
+                {atsScore.toFixed(0)}%
+              </div>
+            </div>
+            {latexCode && (
+              <div className="flex gap-2">
+                {user && (
+                  <button
+                    onClick={() => router.push('/dashboard')}
+                    className="px-4 py-2 bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition-colors text-sm font-medium"
+                  >
+                    View in Dashboard
+                  </button>
+                )}
+                <button
+                  onClick={() => {
+                    navigator.clipboard.writeText(latexCode);
+                    alert('LaTeX code copied to clipboard!');
+                  }}
+                  className="px-4 py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors text-sm font-medium"
+                >
+                  Copy LaTeX
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* Input Area */}
       <div className="border-t border-gray-200 p-4">
