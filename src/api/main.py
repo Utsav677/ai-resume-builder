@@ -19,6 +19,7 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=[
         "http://localhost:3000",  # Next.js dev
+        "http://localhost:3001",  # Next.js dev (alternate port)
         "https://your-frontend-domain.vercel.app",  # Production
         os.getenv("FRONTEND_URL", "http://localhost:3000")
     ],
