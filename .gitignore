@@ -60,10 +60,6 @@ frontend/node_modules/
 frontend/out/
 frontend/build/
 
-# v0 design artifacts (don't commit)
-v0 design/.next/
-v0 design/node_modules/
-
 # PDFs generated
 outputs/
 *.pdf

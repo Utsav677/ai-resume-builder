@@ -20,10 +20,10 @@ All core features have been implemented:
 
 ### 1. Test with LangGraph Studio
 
-```bash
+\`\`\`bash
 # Make sure your .env file has OPENAI_API_KEY set
 langgraph dev
-```
+\`\`\`
 
 This will:
 - Start LangGraph Studio on http://localhost:2024
@@ -49,7 +49,7 @@ This will:
 ## 📦 What Was Built
 
 ### File Structure
-```
+\`\`\`
 resume-builder-agent/
 ├── src/resume_agent/
 │   ├── graph.py              # LangGraph workflow (9 nodes)
@@ -67,11 +67,11 @@ resume-builder-agent/
 ├── outputs/                  # Generated PDFs (created automatically)
 ├── langgraph.json           # LangGraph deployment config
 └── pyproject.toml           # Python dependencies
-```
+\`\`\`
 
 ### LangGraph Workflow
 
-```
+\`\`\`
 START
   ↓
 check_profile
@@ -93,7 +93,7 @@ check_profile
                        complete
                           ↓
                          END
-```
+\`\`\`
 
 ---
 
@@ -112,7 +112,7 @@ check_profile
 
 ### Step 1: Create GCP Project
 
-```bash
+\`\`\`bash
 # Create project
 gcloud projects create resume-builder-prod --name="Resume Builder"
 
@@ -124,11 +124,11 @@ gcloud services enable \
   run.googleapis.com \
   sqladmin.googleapis.com \
   secretmanager.googleapis.com
-```
+\`\`\`
 
 ### Step 2: Setup Cloud SQL (PostgreSQL)
 
-```bash
+\`\`\`bash
 # Create PostgreSQL instance
 gcloud sql instances create resume-builder-db \
   --database-version=POSTGRES_15 \
@@ -146,13 +146,13 @@ gcloud sql users set-password postgres \
 
 # Get connection name (save this!)
 gcloud sql instances describe resume-builder-db --format="value(connectionName)"
-```
+\`\`\`
 
 ### Step 3: Update Environment Variables
 
 Create/update your `.env` file:
 
-```env
+\`\`\`env
 # OpenAI
 OPENAI_API_KEY=sk-your-key-here
 OPENAI_MODEL=gpt-4o-mini
@@ -167,23 +167,23 @@ JWT_EXPIRATION_MINUTES=10080
 
 # Default user for LangGraph Studio
 DEFAULT_USER_ID=default-user-123
-```
+\`\`\`
 
 ### Step 4: Deploy to LangGraph Cloud
 
 Option A: **Using LangGraph CLI (Recommended)**
 
-```bash
+\`\`\`bash
 # Install LangGraph CLI
 pip install langgraph-cli
 
 # Deploy
 langgraph deploy --project resume-builder-prod
-```
+\`\`\`
 
 Option B: **Using Docker + Cloud Run**
 
-```bash
+\`\`\`bash
 # Build Docker image
 docker build -t gcr.io/resume-builder-prod/resume-agent .
 
@@ -198,11 +198,11 @@ gcloud run deploy resume-agent \
   --allow-unauthenticated \
   --add-cloudsql-instances YOUR_CONNECTION_NAME \
   --set-env-vars OPENAI_API_KEY=$OPENAI_API_KEY
-```
+\`\`\`
 
 ### Step 5: Store Secrets in Secret Manager
 
-```bash
+\`\`\`bash
 # Store OpenAI API key
 echo -n "sk-your-key" | gcloud secrets create openai-api-key --data-file=-
 
@@ -211,7 +211,7 @@ echo -n "your-jwt-secret" | gcloud secrets create jwt-secret --data-file=-
 
 # Store database URL
 echo -n "postgresql://..." | gcloud secrets create database-url --data-file=-
-```
+\`\`\`
 
 ---
 
@@ -219,7 +219,7 @@ echo -n "postgresql://..." | gcloud secrets create database-url --data-file=-
 
 ### Running Locally
 
-```bash
+\`\`\`bash
 # Install dependencies
 pip install -e .
 
@@ -231,7 +231,7 @@ langgraph dev
 
 # Or test individual components
 python -c "from src.resume_agent.graph import graph; print('Graph OK!')"
-```
+\`\`\`
 
 ### Testing Without PDF Compilation
 
@@ -248,15 +248,15 @@ If you want to build a custom frontend instead of using LangGraph Studio:
 
 ### Setup
 
-```bash
+\`\`\`bash
 npx create-next-app@latest resume-builder-frontend
 cd resume-builder-frontend
 npm install @langchain/langgraph-sdk
-```
+\`\`\`
 
 ### Example API Integration
 
-```typescript
+\`\`\`typescript
 import { Client } from "@langchain/langgraph-sdk";
 
 const client = new Client({
@@ -272,18 +272,18 @@ await client.runs.stream(thread.thread_id, "resume_builder", {
     messages: [{ role: "human", content: "Here's my resume..." }]
   }
 });
-```
+\`\`\`
 
 ### Deploy Frontend
 
-```bash
+\`\`\`bash
 # Deploy to Vercel (easiest)
 vercel deploy
 
 # Or Firebase Hosting
 firebase init hosting
 firebase deploy
-```
+\`\`\`
 
 ---
 
@@ -346,10 +346,10 @@ Or use Overleaf.com with the generated LaTeX code.
 **Error:** `ModuleNotFoundError: No module named 'X'`
 
 **Solution:**
-```bash
+\`\`\`bash
 pip install -e .
 pip install email-validator python-jose[cryptography] passlib[bcrypt]
-```
+\`\`\`
 
 ### Database Connection Issues
 
@@ -365,7 +365,7 @@ pip install email-validator python-jose[cryptography] passlib[bcrypt]
 **Error:** Graph won't load in Studio
 
 **Solution:**
-```bash
+\`\`\`bash
 # Test graph loads
 python -c "from src.resume_agent.graph import graph; print('OK')"
 
@@ -374,7 +374,7 @@ cat langgraph.json
 
 # Restart Studio
 langgraph dev
-```
+\`\`\`
 
 ---
 

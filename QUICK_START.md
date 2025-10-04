@@ -2,9 +2,9 @@
 
 ## 🚀 Start Testing Now
 
-```bash
+\`\`\`bash
 langgraph dev
-```
+\`\`\`
 
 Then open http://localhost:2024 in your browser.
 
@@ -13,17 +13,17 @@ Then open http://localhost:2024 in your browser.
 ## 💬 How to Use
 
 ### Step 1: Paste Your Resume
-```
+\`\`\`
 You: "hello"
 Agent: "Welcome! Please paste your resume..."
 
 [Paste your entire resume - any format works]
 
 Agent: "✅ Profile Created! Extracted 3 experiences, 2 projects. Now paste job description."
-```
+\`\`\`
 
 ### Step 2: Paste Job Description
-```
+\`\`\`
 [Paste the job posting]
 
 Agent:
@@ -31,7 +31,7 @@ Agent:
 - "Content Selection Complete! Selected 3 experiences..."
 - "ATS Score: 78%"
 - "✅ Resume Generated! PDF: outputs/resume_xxx_timestamp.pdf"
-```
+\`\`\`
 
 ### Step 3: Get Your Resume
 - LaTeX code shown in chat
@@ -90,7 +90,7 @@ From your resume:
 
 ## 🎓 Example Conversation
 
-```
+\`\`\`
 USER: hi
 
 AGENT: Welcome to the AI Resume Builder!
@@ -137,17 +137,17 @@ AGENT: ✅ Resume Generated Successfully!
        Your tailored resume is ready!
 
        **LaTeX Code:**
-       ```latex
+       \`\`\`latex
        \documentclass[letterpaper,11pt]{article}
        ...
-       ```
-```
+       \`\`\`
+\`\`\`
 
 ---
 
 ## 🗂️ File Structure
 
-```
+\`\`\`
 resume-builder-agent/
 ├── outputs/                          # Generated PDFs
 │   └── resume_user_20250102.pdf
@@ -164,7 +164,7 @@ resume-builder-agent/
     ├── nodes.py                     # All processing nodes
     ├── latex_service.py             # PDF generation
     └── database.py                  # Data persistence
-```
+\`\`\`
 
 ---
 

@@ -1,90 +1,112 @@
-"use client"
+'use client';
 
-import type React from "react"
-
-import { useState, useEffect } from "react"
-import { useAuth } from "@/contexts/AuthContext"
-import { useRouter } from "next/navigation"
-import { apiClient } from "@/lib/api"
+import { useState, useEffect, useRef } from 'react';
+import { useAuth } from '@/contexts/AuthContext';
+import { useRouter } from 'next/navigation';
+import { apiClient } from '@/lib/api';
+import { Button } from '@/components/ui/button';
+import { Textarea } from '@/components/ui/textarea';
+import { Avatar } from '@/components/ui/avatar';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { Send, Bot, User, Sparkles } from 'lucide-react';
 
 interface Message {
-  id: string
-  role: "user" | "assistant"
-  content: string
-  timestamp: Date
+  id: string;
+  role: 'user' | 'assistant';
+  content: string;
+  timestamp: Date;
 }
 
 export default function BuilderPage() {
-  const { user, loading: authLoading } = useAuth()
-  const [messages, setMessages] = useState<Message[]>([])
-  const [input, setInput] = useState("")
-  const [threadId, setThreadId] = useState<string | null>(null)
-  const [loading, setLoading] = useState(false)
-  const [atsScore, setAtsScore] = useState<number | null>(null)
-  const [latexCode, setLatexCode] = useState<string | null>(null)
-  const router = useRouter()
+  const { user, loading: authLoading } = useAuth();
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [input, setInput] = useState('');
+  const [threadId, setThreadId] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [atsScore, setAtsScore] = useState<number | null>(null);
+  const [latexCode, setLatexCode] = useState<string | null>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const router = useRouter();
 
   useEffect(() => {
     if (!authLoading && !user) {
-      router.push("/login")
+      router.push('/login');
     }
-  }, [user, authLoading, router])
+  }, [user, authLoading, router]);
+
+  useEffect(() => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+    }
+  }, [messages]);
 
   const sendMessage = async () => {
-    if (!input.trim() || loading) return
+    if (!input.trim() || loading) return;
 
     const userMessage: Message = {
       id: Date.now().toString(),
-      role: "user",
+      role: 'user',
       content: input.trim(),
       timestamp: new Date(),
+    };
+
+    setInput('');
+    setMessages(prev => [...prev, userMessage]);
+    setLoading(true);
+
+    if (textareaRef.current) {
+      textareaRef.current.style.height = 'auto';
     }
 
-    setInput("")
-    setMessages((prev) => [...prev, userMessage])
-    setLoading(true)
-
     try {
-      const response = await apiClient.sendMessage(userMessage.content, threadId || undefined)
+      const response = await apiClient.sendMessage(userMessage.content, threadId || undefined);
 
-      setThreadId(response.thread_id)
+      setThreadId(response.thread_id);
 
       const assistantMessage: Message = {
         id: (Date.now() + 1).toString(),
-        role: "assistant",
+        role: 'assistant',
         content: response.response,
         timestamp: new Date(),
-      }
+      };
 
-      setMessages((prev) => [...prev, assistantMessage])
+      setMessages(prev => [...prev, assistantMessage]);
 
       if (response.ats_score !== null) {
-        setAtsScore(response.ats_score)
+        setAtsScore(response.ats_score);
       }
 
       if (response.latex_code) {
-        setLatexCode(response.latex_code)
+        setLatexCode(response.latex_code);
       }
     } catch (error: any) {
-      console.error("Error sending message:", error)
+      console.error('Error sending message:', error);
       const errorMessage: Message = {
         id: (Date.now() + 1).toString(),
-        role: "assistant",
-        content: "Sorry, I encountered an error. Please try again.",
+        role: 'assistant',
+        content: 'Sorry, I encountered an error. Please try again.',
         timestamp: new Date(),
-      }
-      setMessages((prev) => [...prev, errorMessage])
+      };
+      setMessages(prev => [...prev, errorMessage]);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-    if (e.key === "Enter" && !e.shiftKey) {
-      e.preventDefault()
-      sendMessage()
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      sendMessage();
     }
-  }
+  };
+
+  const handleInput = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setInput(e.target.value);
+    // Auto-resize textarea
+    e.target.style.height = 'auto';
+    e.target.style.height = `${Math.min(e.target.scrollHeight, 200)}px`;
+  };
 
   if (authLoading) {
     return (
@@ -94,31 +116,28 @@ export default function BuilderPage() {
           <p className="text-sm text-gray-600">Loading...</p>
         </div>
       </div>
-    )
+    );
   }
 
   return (
-    <div className="flex h-screen flex-col bg-white">
+    <div className="flex h-screen flex-col bg-background">
       {/* Header */}
-      <header className="flex items-center justify-between border-b border-gray-200 bg-white px-6 py-4">
+      <header className="flex items-center gap-3 border-b border-border bg-background px-4 py-3">
         <div className="flex items-center gap-2">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-blue-500 to-purple-600">
-            <svg className="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-            </svg>
+          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-blue-500 to-purple-600">
+            <Sparkles className="h-5 w-5 text-white" />
           </div>
-          <h1 className="text-xl font-bold text-gray-900">AI Resume Builder</h1>
+          <h1 className="text-lg font-semibold">AI Resume Builder</h1>
         </div>
-
         {atsScore !== null && (
-          <div className="flex items-center gap-2">
-            <span className="text-sm text-gray-600">ATS Score:</span>
-            <div className={`px-3 py-1.5 rounded-lg text-sm font-bold ${
+          <div className="ml-auto flex items-center gap-2">
+            <span className="text-sm text-muted-foreground">ATS Score:</span>
+            <div className={`rounded-lg px-3 py-1 text-sm font-bold ${
               atsScore >= 80
-                ? 'bg-green-100 text-green-700'
+                ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
                 : atsScore >= 60
-                ? 'bg-yellow-100 text-yellow-700'
-                : 'bg-orange-100 text-orange-700'
+                ? 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400'
+                : 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400'
             }`}>
               {atsScore.toFixed(0)}%
             </div>
@@ -127,38 +146,31 @@ export default function BuilderPage() {
       </header>
 
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto">
+      <ScrollArea className="flex-1" ref={scrollRef}>
         <div className="mx-auto max-w-3xl px-4 py-8">
           {messages.length === 0 && (
             <div className="flex flex-1 items-center justify-center py-16">
               <div className="text-center">
-                <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-gradient-to-br from-blue-500 to-purple-600">
-                  <svg className="h-10 w-10 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                    />
-                  </svg>
+                <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-primary/10">
+                  <Bot className="h-8 w-8 text-primary" />
                 </div>
-                <h2 className="mb-3 text-3xl font-bold text-gray-900">How can I help you build your resume?</h2>
-                <p className="text-gray-600 mb-8 text-lg">Start a conversation by typing a message below</p>
+                <h2 className="mb-2 text-2xl font-semibold">How can I help you build your resume?</h2>
+                <p className="text-muted-foreground mb-8">Start a conversation by typing a message below</p>
 
-                <div className="grid gap-4 sm:grid-cols-2 max-w-2xl mx-auto">
+                <div className="grid gap-3 sm:grid-cols-2 max-w-xl mx-auto">
                   <button
                     onClick={() => setInput("Hi! I'd like to create a resume.")}
-                    className="rounded-xl border-2 border-gray-200 bg-white p-6 text-left transition-all hover:border-blue-300 hover:shadow-lg"
+                    className="rounded-xl border border-border bg-card p-4 text-left transition-colors hover:bg-accent"
                   >
-                    <div className="text-base font-semibold mb-2 text-gray-900">Start building</div>
-                    <div className="text-sm text-gray-600">Create a new resume from scratch</div>
+                    <div className="text-sm font-medium mb-1">Start building</div>
+                    <div className="text-xs text-muted-foreground">Create a new resume</div>
                   </button>
                   <button
                     onClick={() => setInput("I want to optimize my resume for a specific job.")}
-                    className="rounded-xl border-2 border-gray-200 bg-white p-6 text-left transition-all hover:border-blue-300 hover:shadow-lg"
+                    className="rounded-xl border border-border bg-card p-4 text-left transition-colors hover:bg-accent"
                   >
-                    <div className="text-base font-semibold mb-2 text-gray-900">Optimize resume</div>
-                    <div className="text-sm text-gray-600">Tailor to a job description</div>
+                    <div className="text-sm font-medium mb-1">Optimize resume</div>
+                    <div className="text-xs text-muted-foreground">Tailor to a job</div>
                   </button>
                 </div>
               </div>
@@ -168,42 +180,33 @@ export default function BuilderPage() {
           {messages.map((message) => (
             <div
               key={message.id}
-              className={`mb-8 flex gap-4 ${message.role === "user" ? "flex-row-reverse" : "flex-row"}`}
+              className={`mb-8 flex gap-4 ${message.role === 'user' ? 'flex-row-reverse' : 'flex-row'}`}
             >
               {/* Avatar */}
-              <div
-                className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full ${
-                  message.role === "user"
-                    ? "bg-gray-900 text-white"
-                    : "bg-gradient-to-br from-blue-500 to-purple-600 text-white"
-                }`}
-              >
-                {message.role === "user" ? (
-                  <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
-                    />
-                  </svg>
-                ) : (
-                  <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                  </svg>
-                )}
-              </div>
+              <Avatar className="h-8 w-8 shrink-0">
+                <div
+                  className={`flex h-full w-full items-center justify-center ${
+                    message.role === 'user'
+                      ? 'bg-primary text-primary-foreground'
+                      : 'bg-secondary text-secondary-foreground'
+                  }`}
+                >
+                  {message.role === 'user' ? <User className="h-5 w-5" /> : <Bot className="h-5 w-5" />}
+                </div>
+              </Avatar>
 
               {/* Message Content */}
               <div className="flex-1 space-y-2">
                 <div className="flex items-center gap-2">
-                  <span className="text-sm font-semibold text-gray-900">
-                    {message.role === "user" ? "You" : "AI Assistant"}
+                  <span className="text-sm font-semibold">
+                    {message.role === 'user' ? 'You' : 'AI Assistant'}
                   </span>
                 </div>
                 <div
-                  className={`rounded-2xl px-5 py-3 ${
-                    message.role === "user" ? "bg-gray-900 text-white" : "bg-gray-100 text-gray-900"
+                  className={`rounded-2xl px-4 py-3 ${
+                    message.role === 'user'
+                      ? 'bg-primary text-primary-foreground'
+                      : 'bg-muted text-foreground'
                   }`}
                 >
                   <p className="whitespace-pre-wrap leading-relaxed">{message.content}</p>
@@ -214,83 +217,82 @@ export default function BuilderPage() {
 
           {loading && (
             <div className="mb-8 flex gap-4">
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-blue-500 to-purple-600 text-white">
-                <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                </svg>
-              </div>
+              <Avatar className="h-8 w-8 shrink-0">
+                <div className="flex h-full w-full items-center justify-center bg-secondary text-secondary-foreground">
+                  <Bot className="h-5 w-5" />
+                </div>
+              </Avatar>
               <div className="flex-1 space-y-2">
-                <span className="text-sm font-semibold text-gray-900">AI Assistant</span>
-                <div className="rounded-2xl bg-gray-100 px-5 py-3">
+                <span className="text-sm font-semibold">AI Assistant</span>
+                <div className="rounded-2xl bg-muted px-4 py-3">
                   <div className="flex items-center gap-1">
-                    <div className="h-2 w-2 animate-bounce rounded-full bg-gray-600" />
-                    <div className="h-2 w-2 animate-bounce rounded-full bg-gray-600 [animation-delay:0.1s]" />
-                    <div className="h-2 w-2 animate-bounce rounded-full bg-gray-600 [animation-delay:0.2s]" />
+                    <div className="h-2 w-2 animate-bounce rounded-full bg-foreground/40" />
+                    <div className="h-2 w-2 animate-bounce rounded-full bg-foreground/40 [animation-delay:0.1s]" />
+                    <div className="h-2 w-2 animate-bounce rounded-full bg-foreground/40 [animation-delay:0.2s]" />
                   </div>
                 </div>
               </div>
             </div>
           )}
         </div>
-      </div>
+      </ScrollArea>
 
-      {/* Actions bar when resume is ready */}
+      {/* Actions bar (when resume is ready) */}
       {latexCode && (
-        <div className="border-t border-gray-200 bg-blue-50 px-6 py-3">
+        <div className="border-t border-border bg-muted/50 px-4 py-3">
           <div className="mx-auto flex max-w-3xl items-center justify-between gap-4">
-            <span className="text-sm text-gray-700">✓ Resume generated successfully!</span>
+            <span className="text-sm text-muted-foreground">✓ Resume generated successfully!</span>
             <div className="flex gap-2">
-              <button
+              <Button
                 onClick={() => router.push('/dashboard')}
-                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium"
+                variant="default"
+                size="sm"
               >
-                View Dashboard
-              </button>
-              <button
+                View in Dashboard
+              </Button>
+              <Button
                 onClick={() => {
                   navigator.clipboard.writeText(latexCode);
                   alert('LaTeX code copied!');
                 }}
-                className="px-4 py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors text-sm font-medium"
+                variant="outline"
+                size="sm"
               >
                 Copy LaTeX
-              </button>
+              </Button>
             </div>
           </div>
         </div>
       )}
 
       {/* Input */}
-      <div className="border-t border-gray-200 bg-white p-6">
+      <div className="border-t border-border bg-background p-4">
         <div className="mx-auto max-w-3xl">
-          <div className="relative flex items-end gap-3">
-            <textarea
+          <div className="relative flex items-end gap-2">
+            <Textarea
+              ref={textareaRef}
               value={input}
-              onChange={(e) => setInput(e.target.value)}
+              onChange={handleInput}
               onKeyDown={handleKeyDown}
               placeholder="Message AI Resume Builder..."
-              className="min-h-[56px] max-h-[200px] flex-1 resize-none rounded-xl border-2 border-gray-200 px-4 py-3 pr-12 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="min-h-[52px] max-h-[200px] resize-none pr-12"
               rows={1}
               disabled={loading}
             />
-            <button
+            <Button
               onClick={sendMessage}
               disabled={!input.trim() || loading}
-              className="absolute bottom-3 right-3 h-10 w-10 rounded-lg bg-gray-900 text-white hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center"
+              size="icon"
+              className="absolute bottom-2 right-2 h-8 w-8"
             >
-              <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"
-                />
-              </svg>
-            </button>
+              <Send className="h-4 w-4" />
+            </Button>
           </div>
-          <p className="mt-2 text-center text-xs text-gray-500">Press Enter to send, Shift + Enter for new line</p>
+          <p className="mt-2 text-center text-xs text-muted-foreground">
+            Press Enter to send, Shift + Enter for new line
+          </p>
         </div>
       </div>
     </div>
-  )
+  );
 }

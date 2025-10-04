@@ -63,7 +63,7 @@ An AI-powered resume builder that uses **LangGraph** + **OpenAI** to create ATS-
 ## 🏗️ Architecture Overview
 
 ### Backend API Structure
-```
+\`\`\`
 src/
 ├── api/
 │   ├── main.py              # FastAPI app entry point
@@ -79,10 +79,10 @@ src/
     ├── latex_service.py     # PDF generation
     ├── database.py          # SQLite operations
     └── models.py            # Pydantic models
-```
+\`\`\`
 
 ### Frontend Structure
-```
+\`\`\`
 frontend/
 ├── app/
 │   ├── page.tsx             # Landing page
@@ -98,10 +98,10 @@ frontend/
 └── lib/
     ├── firebase.ts          # Firebase initialization (HAS BUG)
     └── api.ts               # API client with auth interceptor
-```
+\`\`\`
 
 ### LangGraph Workflow
-```
+\`\`\`
 User Input → Greeting Node
            ↓
      Profile Extraction → Save to DB
@@ -115,7 +115,7 @@ User Input → Greeting Node
      Resume Generation (LaTeX → PDF)
            ↓
      Save to DB + Return
-```
+\`\`\`
 
 ---
 
@@ -124,7 +124,7 @@ User Input → Greeting Node
 ### Required Environment Variables
 
 **Backend (.env in root):**
-```bash
+\`\`\`bash
 OPENAI_API_KEY=sk-...
 FIREBASE_PROJECT_ID=your-project-id
 FIREBASE_PRIVATE_KEY_ID=...
@@ -135,10 +135,10 @@ FIREBASE_AUTH_URI=https://accounts.google.com/o/oauth2/auth
 FIREBASE_TOKEN_URI=https://oauth2.googleapis.com/token
 FIREBASE_AUTH_PROVIDER_CERT_URL=https://www.googleapis.com/oauth2/v1/certs
 FIREBASE_CLIENT_CERT_URL=https://www.googleapis.com/robot/v1/metadata/x509/...
-```
+\`\`\`
 
 **Frontend (.env.local in frontend/):** ⚠️ **NEEDS TO BE CREATED**
-```bash
+\`\`\`bash
 NEXT_PUBLIC_FIREBASE_API_KEY=AIza...
 NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=your-project.firebaseapp.com
 NEXT_PUBLIC_FIREBASE_PROJECT_ID=your-project-id
@@ -148,14 +148,14 @@ NEXT_PUBLIC_FIREBASE_APP_ID=1:123456:web:abc123
 
 # Backend API URL
 NEXT_PUBLIC_API_URL=http://localhost:8000
-```
+\`\`\`
 
 ---
 
 ## 🚀 How to Run
 
 ### Backend
-```bash
+\`\`\`bash
 # Install dependencies
 pip install -e .
 
@@ -164,13 +164,13 @@ python -m src.api.main
 
 # OR run with LangGraph Studio
 langgraph dev
-```
+\`\`\`
 
 Backend runs on: http://localhost:8000
 LangGraph Studio: http://localhost:2024
 
 ### Frontend
-```bash
+\`\`\`bash
 cd frontend
 
 # Install dependencies (if not done)
@@ -178,7 +178,7 @@ npm install
 
 # Run dev server
 npm run dev
-```
+\`\`\`
 
 Frontend runs on: http://localhost:3000
 
@@ -188,14 +188,14 @@ Frontend runs on: http://localhost:3000
 
 ### 1. Firebase Import Bug in lib/firebase.ts
 **Current (Line 1):**
-```typescript
+\`\`\`typescript
 import { initializeApp } from 'firebase/auth'; // ❌ WRONG
-```
+\`\`\`
 
 **Should be:**
-```typescript
+\`\`\`typescript
 import { initializeApp } from 'firebase/app'; // ✅ CORRECT
-```
+\`\`\`
 
 ### 2. Missing .env.local in Frontend
 Need to create `frontend/.env.local` with Firebase config variables.

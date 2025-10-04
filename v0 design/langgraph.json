@@ -1,7 +1,0 @@
-{
-    "dependencies": ["."],
-    "graphs": {
-      "resume_builder": "src.resume_agent.graph:graph"
-    },
-    "env": ".env"
-  }

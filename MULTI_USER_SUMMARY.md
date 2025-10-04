@@ -45,15 +45,15 @@
 ## 📊 How It Works Now
 
 ### Before (Single User):
-```
+\`\`\`
 User → LangGraph Studio → uses DEFAULT_USER_ID → SQLite Database
-```
+\`\`\`
 ❌ Everyone shared the same profile
 ❌ No authentication
 ❌ Not production-ready
 
 ### After (Multi-User):
-```
+\`\`\`
 User → Next.js Frontend → Firebase Auth (gets token)
   ↓
 FastAPI Backend → Verifies token → Extracts user_id
@@ -61,7 +61,7 @@ FastAPI Backend → Verifies token → Extracts user_id
 LangGraph → Uses actual user_id → Each user has own profile
   ↓
 Database → Separate profiles and resumes per user
-```
+\`\`\`
 ✅ Each user authenticated
 ✅ Isolated data per user
 ✅ Production-ready
@@ -70,7 +70,7 @@ Database → Separate profiles and resumes per user
 
 ## 🗂️ File Structure
 
-```
+\`\`\`
 resume-builder-agent/
 ├── src/
 │   ├── api/                           # NEW: FastAPI server
@@ -95,7 +95,7 @@ resume-builder-agent/
 ├── NEXTJS_SETUP.md                    # Frontend setup guide
 ├── MULTI_USER_SUMMARY.md              # This file
 └── pyproject.toml                     # Updated with FastAPI deps
-```
+\`\`\`
 
 ---
 
@@ -103,22 +103,22 @@ resume-builder-agent/
 
 ### 1. Start FastAPI Server
 
-```bash
+\`\`\`bash
 cd resume-builder-agent
 python -m src.api.main
-```
+\`\`\`
 
 Server runs on: **http://localhost:8000**
 
 ### 2. Check Health
 
-```bash
+\`\`\`bash
 curl http://localhost:8000/
 # Response: {"status":"ok","service":"Resume Builder API","version":"1.0.0"}
 
 curl http://localhost:8000/health
 # Response: {"status":"healthy","database":"connected","langgraph":"ready"}
-```
+\`\`\`
 
 ### 3. View API Docs
 
@@ -132,18 +132,18 @@ Visit: **http://localhost:8000/docs**
 1. Create Firebase project
 2. Download service account JSON
 3. Set in `.env`:
-   ```bash
+   \`\`\`bash
    FIREBASE_CREDENTIALS_PATH=./firebase-credentials.json
-   ```
+   \`\`\`
 
 ### For Frontend:
 1. Get Firebase web config
 2. Set in `.env.local`:
-   ```bash
+   \`\`\`bash
    NEXT_PUBLIC_FIREBASE_API_KEY=...
    NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=...
    NEXT_PUBLIC_FIREBASE_PROJECT_ID=...
-   ```
+   \`\`\`
 
 ---
 
@@ -151,7 +151,7 @@ Visit: **http://localhost:8000/docs**
 
 ### Without Frontend (using curl):
 
-```bash
+\`\`\`bash
 # NOTE: You need a real Firebase ID token from frontend for this to work
 # For testing, Firebase returns 403 in "test mode" but shows warnings
 
@@ -166,7 +166,7 @@ curl http://localhost:8000/api/resumes/
 curl -H "Authorization: Bearer <firebase_token>" \
      http://localhost:8000/api/resumes/
 # Expected: [] (empty array for new user)
-```
+\`\`\`
 
 ### With Frontend (full flow):
 
@@ -246,19 +246,19 @@ Build the web interface with:
 ### Phase 3: Deployment
 
 **Backend → GCP Cloud Run:**
-```bash
+\`\`\`bash
 gcloud run deploy resume-builder-api \
   --source . \
   --platform managed \
   --region us-central1 \
   --set-env-vars FIREBASE_CREDENTIALS_JSON="$(cat firebase-credentials.json)"
-```
+\`\`\`
 
 **Frontend → Vercel:**
-```bash
+\`\`\`bash
 cd resume-builder-frontend
 vercel
-```
+\`\`\`
 
 **Estimated Time:** 1 hour
 
@@ -335,7 +335,7 @@ vercel
 **Phase 1 Complete**: The backend now supports multiple users with Firebase authentication!
 
 **Try it:**
-```bash
+\`\`\`bash
 # Terminal 1: Start FastAPI
 python -m src.api.main
 
@@ -343,7 +343,7 @@ python -m src.api.main
 curl http://localhost:8000/
 curl http://localhost:8000/health
 curl http://localhost:8000/docs  # Open in browser
-```
+\`\`\`
 
 **Next:** Build the Next.js frontend! See `NEXTJS_SETUP.md`
 

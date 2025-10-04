@@ -10,7 +10,7 @@ The graph has been completely rebuilt with a **simple linear flow** using proper
 
 ### **8 Clean Nodes (No More Confusion!):**
 
-```
+\`\`\`
 START
   ↓
 1. initialize_session
@@ -31,7 +31,7 @@ START
 8. generate_resume (creates LaTeX + PDF)
        ↓
       END
-```
+\`\`\`
 
 ---
 
@@ -54,12 +54,12 @@ START
 
 ### **Interrupts are the Key!**
 
-```python
+\`\`\`python
 graph = workflow.compile(
     checkpointer=memory,
     interrupt_before=["wait_for_resume", "wait_for_job_description"]
 )
-```
+\`\`\`
 
 **What this does:**
 - Graph **pauses** before `wait_for_resume` and `wait_for_job_description`
@@ -73,7 +73,7 @@ graph = workflow.compile(
 
 ### **New User (First Time):**
 
-```
+\`\`\`
 Turn 1:
 User: "hi"
 Graph: initialize_session → wait_for_resume [PAUSES]
@@ -88,11 +88,11 @@ Turn 3:
 User: [pastes job description]
 Graph: [RESUMES] → analyze_job → select_content → optimize_ats → generate_resume → END
 Agent: "✅ Job Analysis... ✅ Content Selected... ✅ ATS Score: 82%... 🎉 Resume Generated!"
-```
+\`\`\`
 
 ### **Returning User (Has Profile):**
 
-```
+\`\`\`
 Turn 1:
 User: "hi"
 Graph: initialize_session → wait_for_job_description [PAUSES]
@@ -102,7 +102,7 @@ Turn 2:
 User: [pastes job description]
 Graph: [RESUMES] → analyze_job → select_content → optimize_ats → generate_resume → END
 Agent: "✅ Job Analysis... ✅ ATS Score: 85%... 🎉 Resume Generated!"
-```
+\`\`\`
 
 ---
 
@@ -156,13 +156,13 @@ Agent: "✅ Job Analysis... ✅ ATS Score: 85%... 🎉 Resume Generated!"
 
 ### **1. Start Fresh**
 
-```bash
+\`\`\`bash
 # Delete old checkpoints to start clean
 rm resume_builder_checkpoints.db
 
 # Start LangGraph Studio
 langgraph dev
-```
+\`\`\`
 
 ### **2. Test New User Flow**
 
@@ -203,18 +203,18 @@ In Studio:
 
 ### **1. Interrupts Solve Everything**
 
-```python
+\`\`\`python
 interrupt_before=["wait_for_resume", "wait_for_job_description"]
-```
+\`\`\`
 
 Graph literally **stops and waits** for user input. No more hacks or workarounds!
 
 ### **2. Simple Linear Flow**
 
 No more conditional routing mess. Just:
-```
+\`\`\`
 init → wait → process → wait → process → process → process → output
-```
+\`\`\`
 
 ### **3. Clear Node Types**
 
@@ -225,9 +225,9 @@ init → wait → process → wait → process → process → process → outpu
 
 ### **4. State Management**
 
-```python
+\`\`\`python
 checkpointer=SqliteSaver.from_conn_string("resume_builder_checkpoints.db")
-```
+\`\`\`
 
 Conversation state persists between turns automatically.
 
@@ -249,7 +249,7 @@ Conversation state persists between turns automatically.
 
 ## 📊 Flow Diagram
 
-```
+\`\`\`
 User Starts
      ↓
  initialize_session
@@ -275,7 +275,7 @@ Has Profile? ─NO─→ wait_for_resume ⏸️
               🎉 LaTeX + PDF + ATS Score
                         ↓
                        END
-```
+\`\`\`
 
 ---
 

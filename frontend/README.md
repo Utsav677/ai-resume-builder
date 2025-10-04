@@ -5,17 +5,17 @@ Next.js frontend for the AI Resume Builder with Firebase authentication.
 ## Setup
 
 1. **Install dependencies:**
-```bash
+\`\`\`bash
 npm install
-```
+\`\`\`
 
 2. **Create `.env.local` file:**
-```bash
+\`\`\`bash
 cp .env.local.example .env.local
-```
+\`\`\`
 
 3. **Add your Firebase config to `.env.local`:**
-```
+\`\`\`
 NEXT_PUBLIC_FIREBASE_API_KEY=your-api-key
 NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=your-project.firebaseapp.com
 NEXT_PUBLIC_FIREBASE_PROJECT_ID=your-project-id
@@ -23,12 +23,12 @@ NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=your-project.appspot.com
 NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=123456789
 NEXT_PUBLIC_FIREBASE_APP_ID=1:123456:web:abc123
 NEXT_PUBLIC_API_URL=http://localhost:8000
-```
+\`\`\`
 
 4. **Run development server:**
-```bash
+\`\`\`bash
 npm run dev
-```
+\`\`\`
 
 Open [http://localhost:3000](http://localhost:3000) in your browser.
 
@@ -51,7 +51,7 @@ Open [http://localhost:3000](http://localhost:3000) in your browser.
 
 ## Project Structure
 
-```
+\`\`\`
 frontend/
 ├── app/
 │   ├── login/          # Login page
@@ -68,7 +68,7 @@ frontend/
 │   ├── firebase.ts     # Firebase config
 │   └── api.ts          # API client
 └── ...config files
-```
+\`\`\`
 
 ## Usage
 
@@ -81,16 +81,16 @@ frontend/
 
 ## Build for Production
 
-```bash
+\`\`\`bash
 npm run build
 npm start
-```
+\`\`\`
 
 ## Deploy to Vercel
 
-```bash
+\`\`\`bash
 npm i -g vercel
 vercel
-```
+\`\`\`
 
 Remember to add environment variables in Vercel dashboard!

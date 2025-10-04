@@ -17,10 +17,10 @@ This guide walks you through building the Next.js frontend for the Resume Builde
 
 ### 1. Create Next.js App
 
-```bash
+\`\`\`bash
 npx create-next-app@latest resume-builder-frontend --typescript --tailwind --app --eslint
 cd resume-builder-frontend
-```
+\`\`\`
 
 Answer prompts:
 - TypeScript: **Yes**
@@ -33,10 +33,10 @@ Answer prompts:
 
 ### 2. Install Dependencies
 
-```bash
+\`\`\`bash
 npm install firebase axios
 npm install --save-dev @types/node
-```
+\`\`\`
 
 ---
 
@@ -50,7 +50,7 @@ npm install --save-dev @types/node
 
 ### 2. Create `.env.local`
 
-```bash
+\`\`\`bash
 # Firebase Config
 NEXT_PUBLIC_FIREBASE_API_KEY=your-api-key
 NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=your-project.firebaseapp.com
@@ -61,13 +61,13 @@ NEXT_PUBLIC_FIREBASE_APP_ID=1:123456:web:abc123
 
 # Backend API URL
 NEXT_PUBLIC_API_URL=http://localhost:8000
-```
+\`\`\`
 
 ---
 
 ## 📁 Project Structure
 
-```
+\`\`\`
 src/
 ├── app/
 │   ├── layout.tsx              # Root layout with nav
@@ -92,7 +92,7 @@ src/
 │   └── auth.ts                 # Auth helpers
 └── contexts/
     └── AuthContext.tsx         # Auth state provider
-```
+\`\`\`
 
 ---
 
@@ -100,7 +100,7 @@ src/
 
 ### `src/lib/firebase.ts`
 
-```typescript
+\`\`\`typescript
 import { initializeApp } from 'firebase/app';
 import { getAuth, GoogleAuthProvider } from 'firebase/auth';
 
@@ -116,11 +116,11 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 export const auth = getAuth(app);
 export const googleProvider = new GoogleAuthProvider();
-```
+\`\`\`
 
 ### `src/contexts/AuthContext.tsx`
 
-```typescript
+\`\`\`typescript
 'use client';
 
 import React, { createContext, useContext, useEffect, useState } from 'react';
@@ -210,11 +210,11 @@ export const useAuth = () => {
   if (!context) throw new Error('useAuth must be used within AuthProvider');
   return context;
 };
-```
+\`\`\`
 
 ### `src/lib/api.ts`
 
-```typescript
+\`\`\`typescript
 import axios from 'axios';
 import { auth } from './firebase';
 
@@ -273,7 +273,7 @@ export const apiClient = {
 };
 
 export default api;
-```
+\`\`\`
 
 ---
 
@@ -281,7 +281,7 @@ export default api;
 
 ### `src/app/login/page.tsx`
 
-```typescript
+\`\`\`typescript
 'use client';
 
 import { useState } from 'react';
@@ -380,11 +380,11 @@ export default function LoginPage() {
     </div>
   );
 }
-```
+\`\`\`
 
 ### `src/app/builder/page.tsx`
 
-```typescript
+\`\`\`typescript
 'use client';
 
 import { useState } from 'react';
@@ -466,16 +466,16 @@ export default function BuilderPage() {
     </div>
   );
 }
-```
+\`\`\`
 
 ---
 
 ## 🚀 Running the Frontend
 
-```bash
+\`\`\`bash
 cd resume-builder-frontend
 npm run dev
-```
+\`\`\`
 
 Visit: **http://localhost:3000**
 
@@ -494,14 +494,14 @@ Visit: **http://localhost:3000**
 
 ### Vercel (Recommended)
 
-```bash
+\`\`\`bash
 # Install Vercel CLI
 npm i -g vercel
 
 # Deploy
 cd resume-builder-frontend
 vercel
-```
+\`\`\`
 
 Update environment variables in Vercel dashboard:
 - `NEXT_PUBLIC_API_URL=https://your-backend-url.run.app`

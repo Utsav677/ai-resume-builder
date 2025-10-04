@@ -13,11 +13,11 @@ The graph was restarting from the beginning after each message instead of contin
 
 **File:** `src/resume_agent/graph.py`
 
-```python
+\`\`\`python
 from langgraph.checkpoint.sqlite import SqliteSaver
 memory = SqliteSaver.from_conn_string("resume_builder_checkpoints.db")
 graph = workflow.compile(checkpointer=memory)
-```
+\`\`\`
 
 **Why:** This ensures the graph remembers state between user messages. Without checkpointing, each message starts a fresh graph execution.
 
@@ -45,20 +45,20 @@ graph = workflow.compile(checkpointer=memory)
 **File:** `src/resume_agent/graph.py`
 
 **Before:**
-```python
+\`\`\`python
 # This caused immediate completion when no job description
 def route_from_job_input(state):
     if state.get("job_description"):
         return "analyze_job"
     else:
         return "complete"  # ❌ Ends the graph!
-```
+\`\`\`
 
 **After:**
-```python
+\`\`\`python
 # Always progress to analyze_job, let the node handle waiting
 workflow.add_edge("get_job_input", "analyze_job")
-```
+\`\`\`
 
 ### 5. **Job Analysis Graceful Handling**
 
@@ -75,27 +75,27 @@ workflow.add_edge("get_job_input", "analyze_job")
 ### Conversation Flow
 
 **Turn 1:** User starts conversation
-```
+\`\`\`
 User: "hello"
 Agent: "Welcome! Please paste your resume..."
 Graph: check_profile → (no profile) → extract_profile → [WAITS]
-```
+\`\`\`
 
 **Turn 2:** User pastes resume
-```
+\`\`\`
 User: [Pastes LaTeX resume]
 Agent: "✅ Profile Created! ... Now paste the job description"
 Graph: extract_profile (processes resume) → get_job_input → analyze_job → complete → [WAITS]
 State: profile_complete=True, user profile saved to DB
-```
+\`\`\`
 
 **Turn 3:** User pastes job description
-```
+\`\`\`
 User: [Pastes job description]
 Agent: "Got it! Analyzing..." → "Job Analysis Complete!" → ... → "Resume Generated!"
 Graph: get_job_input (detects JD) → analyze_job → select_content → optimize_ats → generate_latex → compile_pdf → complete
 State: job_description, ats_score, latex_code, pdf_path all saved
-```
+\`\`\`
 
 ---
 
@@ -103,10 +103,10 @@ State: job_description, ats_score, latex_code, pdf_path all saved
 
 ### 1. Restart LangGraph Studio
 
-```bash
+\`\`\`bash
 # Kill any running instance (Ctrl+C)
 langgraph dev
-```
+\`\`\`
 
 ### 2. Start Fresh Conversation
 
@@ -148,26 +148,26 @@ Copy any job posting and paste it.
    - Click "New Thread" to explicitly start fresh
 
 2. **Check Database File:**
-   ```bash
+   \`\`\`bash
    ls -lh resume_builder_checkpoints.db
-   ```
+   \`\`\`
    Should exist and grow in size as you chat
 
 3. **Enable Debug Logs:**
-   ```bash
+   \`\`\`bash
    # In nodes.py, the DEBUG: prints show message flow
    # Check console output for "DEBUG: Found user message: ..."
-   ```
+   \`\`\`
 
 4. **Verify State Persistence:**
-   ```python
+   \`\`\`python
    # Test script to check state
    from src.resume_agent.graph import graph
    from langgraph.checkpoint.sqlite import SqliteSaver
 
    checkpointer = SqliteSaver.from_conn_string("resume_builder_checkpoints.db")
    # Check it has data
-   ```
+   \`\`\`
 
 ---
 
@@ -212,7 +212,7 @@ Copy any job posting and paste it.
 
 **Full Working Example:**
 
-```
+\`\`\`
 USER: hi
 AGENT: Welcome! ... paste your resume
 
@@ -228,7 +228,7 @@ AGENT: LaTeX generated...
 AGENT: ✅ Resume Generated! PDF: outputs/resume_xxx.pdf
 
 [Conversation ends, user can start new one for different job]
-```
+\`\`\`
 
 ---
 

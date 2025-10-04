@@ -40,7 +40,7 @@ The Resume Builder now supports multiple users! This guide shows you how to run 
 
 Add to your `.env` file:
 
-```bash
+\`\`\`bash
 # Firebase Admin SDK
 FIREBASE_CREDENTIALS_PATH=./firebase-credentials.json
 # OR as JSON string:
@@ -52,7 +52,7 @@ FRONTEND_URL=http://localhost:3000
 
 # OpenAI (existing)
 OPENAI_API_KEY=your-openai-api-key
-```
+\`\`\`
 
 ---
 
@@ -60,17 +60,17 @@ OPENAI_API_KEY=your-openai-api-key
 
 ### Option 1: Direct Run
 
-```bash
+\`\`\`bash
 cd resume-builder-agent
 python -m src.api.main
-```
+\`\`\`
 
 ### Option 2: With Uvicorn
 
-```bash
+\`\`\`bash
 cd resume-builder-agent
 uvicorn src.api.main:app --reload --host 0.0.0.0 --port 8000
-```
+\`\`\`
 
 The server will start at: **http://localhost:8000**
 
@@ -84,39 +84,39 @@ The server will start at: **http://localhost:8000**
 Login or register user with Firebase token
 
 **Request:**
-```json
+\`\`\`json
 {
   "firebase_token": "<Firebase ID token from frontend>"
 }
-```
+\`\`\`
 
 **Response:**
-```json
+\`\`\`json
 {
   "user_id": "uuid",
   "email": "user@example.com",
   "full_name": "John Doe",
   "message": "Login successful"
 }
-```
+\`\`\`
 
 #### `GET /api/auth/me`
 Get current user info
 
 **Headers:**
-```
+\`\`\`
 Authorization: Bearer <firebase_token>
-```
+\`\`\`
 
 **Response:**
-```json
+\`\`\`json
 {
   "user_id": "uuid",
   "email": "user@example.com",
   "full_name": "John Doe",
   "created_at": "2025-10-02T12:00:00"
 }
-```
+\`\`\`
 
 ---
 
@@ -126,20 +126,20 @@ Authorization: Bearer <firebase_token>
 Send a message to the resume builder agent
 
 **Headers:**
-```
+\`\`\`
 Authorization: Bearer <firebase_token>
-```
+\`\`\`
 
 **Request:**
-```json
+\`\`\`json
 {
   "message": "hi",
   "thread_id": "optional-thread-id"
 }
-```
+\`\`\`
 
 **Response:**
-```json
+\`\`\`json
 {
   "thread_id": "generated-or-provided-id",
   "response": "Welcome! Please paste your resume...",
@@ -148,23 +148,23 @@ Authorization: Bearer <firebase_token>
   "latex_code": null,
   "pdf_path": null
 }
-```
+\`\`\`
 
 #### `POST /api/chat/stream`
 Stream responses (Server-Sent Events)
 
 **Headers:**
-```
+\`\`\`
 Authorization: Bearer <firebase_token>
-```
+\`\`\`
 
 **Request:**
-```json
+\`\`\`json
 {
   "message": "paste job description here",
   "thread_id": "existing-thread-id"
 }
-```
+\`\`\`
 
 **Response:** Server-Sent Events stream
 
@@ -176,12 +176,12 @@ Authorization: Bearer <firebase_token>
 List all user's resumes
 
 **Headers:**
-```
+\`\`\`
 Authorization: Bearer <firebase_token>
-```
+\`\`\`
 
 **Response:**
-```json
+\`\`\`json
 [
   {
     "id": 1,
@@ -192,18 +192,18 @@ Authorization: Bearer <firebase_token>
     "has_pdf": true
   }
 ]
-```
+\`\`\`
 
 #### `GET /api/resumes/{resume_id}`
 Get specific resume details
 
 **Headers:**
-```
+\`\`\`
 Authorization: Bearer <firebase_token>
-```
+\`\`\`
 
 **Response:**
-```json
+\`\`\`json
 {
   "id": 1,
   "job_title": "Software Engineer",
@@ -214,21 +214,21 @@ Authorization: Bearer <firebase_token>
   "pdf_path": "outputs/resume_123.pdf",
   "created_at": "2025-10-02T12:00:00"
 }
-```
+\`\`\`
 
 #### `DELETE /api/resumes/{resume_id}`
 Delete a resume
 
 **Headers:**
-```
+\`\`\`
 Authorization: Bearer <firebase_token>
-```
+\`\`\`
 
 #### `GET /api/resumes/profile/me`
 Get user's profile data
 
 **Response:**
-```json
+\`\`\`json
 {
   "has_profile": true,
   "contact": {...},
@@ -237,7 +237,7 @@ Get user's profile data
   "projects": [...],
   "technical_skills": {...}
 }
-```
+\`\`\`
 
 ---
 
@@ -245,7 +245,7 @@ Get user's profile data
 
 ### Using curl:
 
-```bash
+\`\`\`bash
 # 1. Login (after getting Firebase token from frontend)
 curl -X POST http://localhost:8000/api/auth/login \
   -H "Content-Type: application/json" \
@@ -260,11 +260,11 @@ curl -X POST http://localhost:8000/api/chat/message \
 # 3. List resumes
 curl -X GET http://localhost:8000/api/resumes/ \
   -H "Authorization: Bearer your-firebase-token"
-```
+\`\`\`
 
 ### Using Python:
 
-```python
+\`\`\`python
 import requests
 
 # Firebase token (get from frontend after user signs in)
@@ -289,7 +289,7 @@ response = requests.post(
 )
 chat_response = response.json()
 print(chat_response)
-```
+\`\`\`
 
 ---
 
@@ -353,13 +353,13 @@ Once the server is running, visit:
 
 ### Docker (Coming Soon)
 
-```dockerfile
+\`\`\`dockerfile
 FROM python:3.11
 WORKDIR /app
 COPY . .
 RUN pip install -e .
 CMD ["uvicorn", "src.api.main:app", "--host", "0.0.0.0", "--port", "8000"]
-```
+\`\`\`
 
 ### GCP Cloud Run
 
@@ -367,14 +367,14 @@ CMD ["uvicorn", "src.api.main:app", "--host", "0.0.0.0", "--port", "8000"]
 2. Set environment variables (Firebase credentials as JSON string)
 3. Deploy:
 
-```bash
+\`\`\`bash
 gcloud run deploy resume-builder-api \
   --source . \
   --platform managed \
   --region us-central1 \
   --allow-unauthenticated \
   --set-env-vars FIREBASE_CREDENTIALS_JSON="$(cat firebase-credentials.json)"
-```
+\`\`\`
 
 ---
 
@@ -389,7 +389,7 @@ gcloud run deploy resume-builder-api \
 
 ## 📁 File Structure
 
-```
+\`\`\`
 src/
 ├── api/
 │   ├── __init__.py
@@ -404,7 +404,7 @@ src/
     ├── graph.py                # LangGraph workflow
     ├── nodes.py                # Multi-user support added!
     └── ...
-```
+\`\`\`
 
 ---
 
