@@ -1,0 +1,15 @@
+
+=== ATS OPTIMIZATION ===
+Matched keywords: {'node.js', 'next.js', 'python', 'react', 'aws', 'sql'}
+Keywords to bold: {'node.js', 'next.js', 'python', 'react.js', 'react', 'aws', 'sql'}
+Count: 7
+
+=== ATS OPTIMIZATION ===
+Matched keywords: {'node.js', 'next.js', 'python', 'react', 'aws', 'sql'}
+Keywords to bold: {'node.js', 'next.js', 'python', 'react.js', 'react', 'aws', 'sql'}
+Count: 7
+
+=== ATS OPTIMIZATION ===
+Matched keywords: {'node.js', 'next.js', 'python', 'react', 'aws', 'sql'}
+Keywords to bold: {'node.js', 'next.js', 'python', 'react.js', 'react', 'aws', 'sql'}
+Count: 7

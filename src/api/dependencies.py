@@ -3,6 +3,8 @@ from fastapi import Depends, HTTPException, status, Header
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from sqlalchemy.orm import Session
 from typing import Optional
+import jwt
+import os
 
 from ..resume_agent.database import SessionLocal
 from ..resume_agent.models import User
@@ -11,6 +13,18 @@ from .firebase_auth import verify_firebase_token
 
 
 security = HTTPBearer()
+
+
+def verify_session_jwt(token: str) -> Optional[dict]:
+    """Verify JWT token from Next.js session"""
+    try:
+        secret = os.getenv('SESSION_SECRET', 'VAsT8elrCbxfZqY2xGSzmJJxyOabzhxgnrTOApYFgug')
+        payload = jwt.decode(token, secret, algorithms=['HS256'])
+        return payload
+    except jwt.ExpiredSignatureError:
+        return None
+    except jwt.InvalidTokenError:
+        return None
 
 
 def get_db():
@@ -27,9 +41,9 @@ async def get_current_user_from_firebase(
     db: Session = Depends(get_db)
 ) -> User:
     """
-    Dependency to get current user from Firebase ID token
+    Dependency to get current user from Firebase ID token or session JWT
 
-    Expects header: Authorization: Bearer <firebase_id_token>
+    Expects header: Authorization: Bearer <token>
     """
     if not authorization:
         raise HTTPException(
@@ -51,7 +65,16 @@ async def get_current_user_from_firebase(
             detail="Invalid authorization header format"
         )
 
-    # Verify Firebase token
+    # First try session JWT
+    session_data = verify_session_jwt(token)
+    if session_data and 'uid' in session_data:
+        # Get user by Firebase UID from session
+        user = db.query(User).filter(User.user_id == session_data['uid']).first()
+        if user:
+            print(f"✓ Authenticated via session JWT: {user.email}")
+            return user
+
+    # Fall back to Firebase ID token verification
     firebase_user = await verify_firebase_token(token)
     if not firebase_user:
         raise HTTPException(

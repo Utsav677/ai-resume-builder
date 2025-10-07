@@ -1,5 +1,5 @@
 """Chat endpoints for streaming LangGraph responses"""
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, UploadFile, File
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 from typing import Optional, AsyncIterator
@@ -8,9 +8,10 @@ import uuid
 
 from langchain_core.messages import HumanMessage
 
-from ..dependencies import get_current_user_optional
+from ..dependencies import get_current_user_optional, get_current_user_from_firebase
 from ...resume_agent.models import User
 from ...resume_agent.graph import graph
+from ...resume_agent.file_parser import extract_text_from_file
 
 
 router = APIRouter()
@@ -30,6 +31,7 @@ class ChatResponse(BaseModel):
     ats_score: Optional[float] = None
     latex_code: Optional[str] = None
     pdf_path: Optional[str] = None
+    pdf_filename: Optional[str] = None  # For guest downloads
 
 
 @router.post("/message", response_model=ChatResponse)
@@ -84,13 +86,21 @@ async def send_message(
         last_message = messages[-1] if messages else None
         response_text = last_message.content if last_message else "No response"
 
+        # Extract PDF filename for guest downloads
+        pdf_filename = None
+        pdf_path = result.get("pdf_path")
+        if pdf_path and is_guest:
+            import os
+            pdf_filename = os.path.basename(pdf_path)
+
         return ChatResponse(
             thread_id=thread_id,
             response=response_text,
             current_stage=result.get("current_stage", "unknown"),
             ats_score=result.get("ats_score"),
             latex_code=result.get("latex_code"),
-            pdf_path=result.get("pdf_path")
+            pdf_path=result.get("pdf_path"),
+            pdf_filename=pdf_filename
         )
 
     except Exception as e:
@@ -98,6 +108,62 @@ async def send_message(
         import traceback
         traceback.print_exc()
         raise HTTPException(status_code=500, detail=f"Graph invocation error: {str(e)}")
+
+
+@router.post("/upload")
+async def upload_file(
+    file: UploadFile = File(...),
+    current_user: Optional[User] = Depends(get_current_user_optional)
+):
+    """
+    Upload and parse a resume file (PDF, DOCX, TXT, or image)
+
+    Extracts text from the uploaded file and returns it.
+    The frontend can then send this text to the /message endpoint.
+
+    Supports:
+    - PDF (with OCR for scanned documents)
+    - DOCX
+    - TXT
+    - Images (PNG, JPG, JPEG) via OCR
+
+    Returns:
+    - extracted_text: The text content from the file
+    - filename: Original filename
+    - file_size: Size in bytes
+    """
+    try:
+        # Read file content
+        file_content = await file.read()
+
+        # Validate file size (max 10MB)
+        if len(file_content) > 10 * 1024 * 1024:
+            raise HTTPException(status_code=413, detail="File too large. Maximum size is 10MB")
+
+        # Extract text from file
+        extracted_text = extract_text_from_file(file_content, file.filename or "unknown")
+
+        # Validate extracted text
+        if not extracted_text or len(extracted_text.strip()) < 50:
+            raise HTTPException(
+                status_code=400,
+                detail="Could not extract enough text from file. Please ensure the file contains readable text."
+            )
+
+        return {
+            "extracted_text": extracted_text,
+            "filename": file.filename,
+            "file_size": len(file_content),
+            "success": True
+        }
+
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        print(f"Error processing file: {e}")
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=f"Error processing file: {str(e)}")
 
 
 @router.post("/stream")

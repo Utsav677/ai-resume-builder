@@ -1,0 +1,12 @@
+
+=== GENERATE RESUME ===
+Keywords to bold: {'node.js', 'next.js', 'python', 'react.js', 'react', 'aws', 'sql'}
+Count: 7
+
+=== GENERATE RESUME ===
+Keywords to bold: {'node.js', 'next.js', 'python', 'react.js', 'react', 'aws', 'sql'}
+Count: 7
+
+=== GENERATE RESUME ===
+Keywords to bold: {'node.js', 'next.js', 'python', 'react.js', 'react', 'aws', 'sql'}
+Count: 7

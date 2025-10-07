@@ -7,15 +7,20 @@ from langchain_core.messages import BaseMessage
 
 class ResumeBuilderState(TypedDict):
     """State for the resume builder agent"""
-    
+
     # User context
     user_id: str
-    
+    is_guest: bool  # Guest vs authenticated user
+
     # Conversation messages
     messages: Annotated[list[BaseMessage], add_messages]
-    
+
+    # Input validation (guard rails)
+    input_valid: bool
+
     # Profile setup
     profile_complete: bool
+    profile_data: Optional[dict]  # For guest users
     raw_input_text: Optional[str]
     
     # Job description
@@ -27,6 +32,7 @@ class ResumeBuilderState(TypedDict):
     selected_projects: Optional[list]
     prioritized_skills: Optional[dict]
     ats_score: Optional[float]
+    matched_keywords: Optional[list]  # Keywords from ATS optimization
     
     # Output
     output_format: Literal["pdf", "latex"]
@@ -36,15 +42,18 @@ class ResumeBuilderState(TypedDict):
     # Process control
     current_stage: Literal[
         "init",
-        "profile_check",
-        "profile_input",
-        "profile_extraction",
-        "job_input",
-        "job_analysis",
-        "content_selection",
-        "ats_optimization",
-        "latex_generation",
-        "pdf_compilation",
-        "complete"
+        "initialized",
+        "waiting_for_resume",
+        "extracting_profile",
+        "awaiting_profile_confirmation",
+        "profile_confirmed",
+        "waiting_for_job_description",
+        "analyzing_job",
+        "selecting_content",
+        "optimizing_ats",
+        "generating_resume",
+        "complete",
+        "error"
     ]
     needs_user_input: bool
+    profile_needs_confirmation: Optional[bool]  # NEW: For human-in-the-loop

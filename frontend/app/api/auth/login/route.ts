@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { adminAuth } from '@/lib/server/firebase-admin';
 import { createSession } from '@/lib/server/session';
 
 export async function POST(request: NextRequest) {
@@ -13,34 +12,35 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // For login, we need to verify the password
-    // Firebase Admin SDK doesn't have a direct password verification method
-    // We'll use a workaround: try to get a custom token and verify
+    // Call FastAPI backend for secure password verification
+    const backendUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+    const authResponse = await fetch(`${backendUrl}/api/auth/email/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password }),
+    });
 
-    // First, try to get the user by email
-    const userRecord = await adminAuth.getUserByEmail(email);
+    if (!authResponse.ok) {
+      const errorData = await authResponse.json();
+      throw new Error(errorData.detail || 'Invalid email or password');
+    }
 
-    // Note: Firebase Admin SDK cannot verify passwords directly
-    // In production, you'd want to use Firebase Auth REST API or client SDK for this
-    // For now, we'll create a custom token approach
+    const authData = await authResponse.json();
 
-    // Generate a custom token (this assumes password is correct - see note below)
-    const customToken = await adminAuth.createCustomToken(userRecord.uid);
-
-    // Create session
-    await createSession(userRecord.uid, userRecord.email || null);
+    // Create session with Firebase user data
+    await createSession(authData.user.uid, authData.user.email);
 
     return NextResponse.json({
       success: true,
       user: {
-        uid: userRecord.uid,
-        email: userRecord.email,
+        uid: authData.user.uid,
+        email: authData.user.email,
       },
     });
   } catch (error: any) {
     console.error('Login error:', error);
     return NextResponse.json(
-      { error: 'Invalid email or password' },
+      { error: error.message || 'Invalid email or password' },
       { status: 401 }
     );
   }

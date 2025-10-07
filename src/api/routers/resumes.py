@@ -1,9 +1,11 @@
 """Resume management endpoints"""
 from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi.responses import FileResponse
 from sqlalchemy.orm import Session
 from pydantic import BaseModel
 from typing import List, Optional
 from datetime import datetime
+import os
 
 from ..dependencies import get_db, get_current_user_from_firebase
 from ...resume_agent.models import User, UserProfile, ResumeGeneration
@@ -17,6 +19,8 @@ class ResumeListItem(BaseModel):
     id: int
     job_title: str
     company_name: Optional[str]
+    version: int
+    resume_filename: str
     ats_score: Optional[float]
     created_at: str
     has_pdf: bool
@@ -24,7 +28,7 @@ class ResumeListItem(BaseModel):
 
 class ResumeDetail(BaseModel):
     """Detailed resume response"""
-    id: int
+    id: str  # Changed to str for generation_id (UUID)
     job_title: str
     company_name: Optional[str]
     job_description: str
@@ -61,9 +65,11 @@ async def list_resumes(
 
     return [
         ResumeListItem(
-            id=r.id,
+            id=r.generation_id,  # Changed from r.id to r.generation_id
             job_title=r.job_title or "Untitled Position",
             company_name=r.company_name,
+            version=int(r.version) if r.version is not None else 0,
+            resume_filename=r.resume_filename or "resume",
             ats_score=r.ats_score,
             created_at=r.created_at.isoformat() if r.created_at else "",
             has_pdf=bool(r.pdf_path)
@@ -74,7 +80,7 @@ async def list_resumes(
 
 @router.get("/{resume_id}", response_model=ResumeDetail)
 async def get_resume(
-    resume_id: int,
+    resume_id: str,  # Changed to str for generation_id (UUID)
     current_user: User = Depends(get_current_user_from_firebase),
     db: Session = Depends(get_db)
 ):
@@ -84,7 +90,7 @@ async def get_resume(
     Returns the full resume data including LaTeX code and PDF path.
     """
     resume = db.query(ResumeGeneration).filter(
-        ResumeGeneration.id == resume_id,
+        ResumeGeneration.generation_id == resume_id,
         ResumeGeneration.user_id == current_user.user_id
     ).first()
 
@@ -95,7 +101,7 @@ async def get_resume(
         )
 
     return ResumeDetail(
-        id=resume.id,
+        id=resume.generation_id,
         job_title=resume.job_title or "Untitled Position",
         company_name=resume.company_name,
         job_description=resume.job_description or "",
@@ -106,19 +112,19 @@ async def get_resume(
     )
 
 
-@router.delete("/{resume_id}")
-async def delete_resume(
-    resume_id: int,
+@router.get("/{resume_id}/download")
+async def download_resume(
+    resume_id: str,
     current_user: User = Depends(get_current_user_from_firebase),
     db: Session = Depends(get_db)
 ):
     """
-    Delete a resume
+    Download a resume PDF
 
-    Removes the resume from the database and optionally deletes the PDF file.
+    Returns the PDF file for download.
     """
     resume = db.query(ResumeGeneration).filter(
-        ResumeGeneration.id == resume_id,
+        ResumeGeneration.generation_id == resume_id,
         ResumeGeneration.user_id == current_user.user_id
     ).first()
 
@@ -128,9 +134,78 @@ async def delete_resume(
             detail="Resume not found"
         )
 
-    # TODO: Delete PDF file if exists
-    # if resume.pdf_path and os.path.exists(resume.pdf_path):
-    #     os.remove(resume.pdf_path)
+    if not resume.pdf_path or not os.path.exists(resume.pdf_path):
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="PDF file not found"
+        )
+
+    filename = resume.resume_filename + ".pdf" if resume.resume_filename else "resume.pdf"
+
+    return FileResponse(
+        path=resume.pdf_path,
+        media_type="application/pdf",
+        filename=filename
+    )
+
+
+@router.get("/download/guest/{filename}")
+async def download_guest_resume(filename: str):
+    """
+    Download a guest resume PDF (temporary, no auth required)
+
+    For security, only allow downloads of files matching guest resume pattern.
+    """
+    # Security: Only allow guest resume files
+    if not filename.startswith("resume_guest_") or not filename.endswith(".pdf"):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid filename"
+        )
+
+    pdf_path = os.path.join("outputs", filename)
+
+    if not os.path.exists(pdf_path):
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="PDF file not found or expired"
+        )
+
+    return FileResponse(
+        path=pdf_path,
+        media_type="application/pdf",
+        filename=f"optimized_resume.pdf"
+    )
+
+
+@router.delete("/{resume_id}")
+async def delete_resume(
+    resume_id: str,  # Changed to str for generation_id
+    current_user: User = Depends(get_current_user_from_firebase),
+    db: Session = Depends(get_db)
+):
+    """
+    Delete a resume
+
+    Removes the resume from the database and optionally deletes the PDF file.
+    """
+    resume = db.query(ResumeGeneration).filter(
+        ResumeGeneration.generation_id == resume_id,
+        ResumeGeneration.user_id == current_user.user_id
+    ).first()
+
+    if not resume:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Resume not found"
+        )
+
+    # Delete PDF file if exists
+    if resume.pdf_path and os.path.exists(resume.pdf_path):
+        try:
+            os.remove(resume.pdf_path)
+        except Exception as e:
+            print(f"Error deleting PDF file: {e}")
 
     db.delete(resume)
     db.commit()

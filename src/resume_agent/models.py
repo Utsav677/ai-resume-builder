@@ -50,24 +50,28 @@ class UserProfile(Base):
 class ResumeGeneration(Base):
     """History of generated resumes"""
     __tablename__ = "resume_generations"
-    
+
     generation_id = Column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
     user_id = Column(String, ForeignKey("users.user_id"), nullable=False)
-    
+
     # Job information
     job_title = Column(String(255))
     company_name = Column(String(255))
     job_description = Column(Text)
-    
+
+    # Versioning (company_resumev0, company_resumev1, etc.)
+    version = Column(Float, default=0)  # Auto-incremented per company
+    resume_filename = Column(String(500))  # e.g., "google_resumev2"
+
     # Generated content
     tailored_content = Column(JSON)  # The customized resume content
     ats_keywords = Column(JSON)  # Keywords used
     ats_score = Column(Float)  # ATS optimization score
-    
+
     # Output files
     latex_code = Column(Text)
     pdf_path = Column(String(500))
-    
+
     # Metadata
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 

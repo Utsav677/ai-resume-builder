@@ -25,35 +25,75 @@ export default function Home() {
   const [threadId, setThreadId] = useState<string | null>(null)
   const [atsScore, setAtsScore] = useState<number | null>(null)
   const [latexCode, setLatexCode] = useState<string | null>(null)
+  const [pdfFilename, setPdfFilename] = useState<string | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const sendMessage = async (file?: File) => {
     if ((!input.trim() && !file) || loading) return
 
-    // For file uploads, read file content first
+    // For file uploads, extract text from backend first
     let messageContent = input.trim()
+    let fileText = ""
+
     if (file) {
-      const fileText = await file.text()
-      messageContent = `Here's my resume:\n\n${fileText}`
-      if (!user) {
-        setGuestResumeUploaded(true)
+      const userMessage: Message = {
+        id: Date.now().toString(),
+        role: "user",
+        content: `Uploading: ${file.name}...`,
+        timestamp: new Date(),
+        file,
       }
-    }
 
-    const userMessage: Message = {
-      id: Date.now().toString(),
-      role: "user",
-      content: file ? `Uploaded: ${file.name}` : messageContent,
-      timestamp: new Date(),
-      file,
-    }
+      setMessages((prev) => [...prev, userMessage])
+      setLoading(true)
 
-    setInput("")
-    setMessages((prev) => [...prev, userMessage])
-    setLoading(true)
+      try {
+        // Upload file and extract text via backend
+        const uploadResponse = await apiClient.uploadFile(file)
+        fileText = uploadResponse.extracted_text
+        messageContent = `Here's my resume:\n\n${fileText}`
+
+        if (!user) {
+          setGuestResumeUploaded(true)
+        }
+
+        // Update message to show success
+        setMessages((prev) => prev.map(m =>
+          m.id === userMessage.id
+            ? { ...m, content: `Uploaded: ${file.name}` }
+            : m
+        ))
+
+        // Clear input in case user typed something
+        setInput("")
+
+      } catch (error: any) {
+        console.error("Error uploading file:", error)
+        const errorMessage: Message = {
+          id: (Date.now() + 1).toString(),
+          role: "assistant",
+          content: `Sorry, I couldn't process that file. ${error.response?.data?.detail || 'Please try a different format (PDF, DOCX, or TXT).'}`,
+          timestamp: new Date(),
+        }
+        setMessages((prev) => [...prev, errorMessage])
+        setLoading(false)
+        return
+      }
+    } else {
+      const userMessage: Message = {
+        id: Date.now().toString(),
+        role: "user",
+        content: messageContent,
+        timestamp: new Date(),
+      }
+
+      setInput("")
+      setMessages((prev) => [...prev, userMessage])
+      setLoading(true)
+    }
 
     try {
-      // Send message to backend API
+      // Send message to backend API (with extracted text if from file)
       const response = await apiClient.sendMessage(messageContent, threadId || undefined)
 
       setThreadId(response.thread_id)
@@ -67,13 +107,17 @@ export default function Home() {
 
       setMessages((prev) => [...prev, assistantMessage])
 
-      // Update ATS score and LaTeX code if available
+      // Update ATS score, LaTeX code, and PDF filename if available
       if (response.ats_score !== null && response.ats_score !== undefined) {
         setAtsScore(response.ats_score)
       }
 
       if (response.latex_code) {
         setLatexCode(response.latex_code)
+      }
+
+      if (response.pdf_filename) {
+        setPdfFilename(response.pdf_filename)
       }
 
     } catch (error: any) {
@@ -125,7 +169,13 @@ export default function Home() {
         <div className="flex items-center gap-3">
           {user ? (
             <>
-              <button onClick={() => router.push("/dashboard")} className="text-sm text-gray-600 hover:text-gray-900">
+              <button
+                onClick={() => router.push("/dashboard")}
+                className="px-4 py-2 text-sm font-medium text-gray-900 hover:bg-gray-100 rounded-lg transition-colors flex items-center gap-2"
+              >
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
                 My Resumes
               </button>
               <div className="h-8 w-8 rounded-full bg-gray-900 flex items-center justify-center text-white text-sm font-medium">
@@ -305,6 +355,18 @@ export default function Home() {
             </div>
             {latexCode && (
               <div className="flex gap-2">
+                {pdfFilename && !user && (
+                  <a
+                    href={`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}/api/resumes/download/guest/${pdfFilename}`}
+                    download="optimized_resume.pdf"
+                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium flex items-center gap-2"
+                  >
+                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                    </svg>
+                    Download PDF
+                  </a>
+                )}
                 {user && (
                   <button
                     onClick={() => router.push('/dashboard')}
